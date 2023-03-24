@@ -11,7 +11,7 @@ DATABASE_URL="postgresql://<user>:<password>@<domain>:<port>/khan"
 ```
 Replace the parts in the <> with your DB connection info.
 
-Now, from the root directory run `npx prisma migrate dev --name` to set up your database tables.
+Now, from the root directory run `npx prisma migrate dev --name my_first_migration` to set up your database tables.
 
 ### Environment variables
 
