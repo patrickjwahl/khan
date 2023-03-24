@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "questions" ALTER COLUMN "notes" DROP NOT NULL,
+ALTER COLUMN "notes" SET DATA TYPE TEXT;

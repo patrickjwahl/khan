@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Course {
+    id        Int      @id @default(autoincrement())
+    modules   Module[]
+    language  String
+    owner     User     @relation(fields: [ownerId], references: [id], name: "courseOwner")
+    editors   User[]   @relation(name: "editors")
+    ownerId   Int
+    image     String?
+    published Boolean  @default(false)
+
+    @@map("courses")
+}
+
+model Module {
+    id           Int      @id @default(autoincrement())
+    course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    courseId     Int
+    isCheckpoint Boolean  @default(false)
+    lessons      Lesson[]
+    title        String
+    index        Int
+    image        String?
+    published    Boolean  @default(false)
+
+    @@map("modules")
+}
+
+model Lesson {
+    id        Int        @id @default(autoincrement())
+    questions Question[]
+    module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+    moduleId  Int
+    title     String
+    index     Int
+
+    @@map("lessons")
+}
+
+model Question {
+    id            Int            @id @default(autoincrement())
+    type          QuestionType
+    question      String?
+    infoTitle     String?
+    info          String?
+    answers       String[]
+    lessonId      Int
+    lesson        Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+    feedbackRules FeedbackRule[]
+    recording     String?
+    notes         String?
+    difficulty    Int?
+    pass          Int?
+    index         Int
+
+    @@map("questions")
+}
+
+model FeedbackRule {
+    id         Int      @id @default(autoincrement())
+    trigger    String
+    feedback   String
+    question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+    questionId Int
+
+    @@map("feedback_rules")
+}
+
+enum QuestionType {
+    TARGET_TO_NATIVE
+    NATIVE_TO_TARGET
+    LISTENING
+    INFO
+
+    @@map("questions_types")
+}
+
+model User {
+    id              Int      @id @default(autoincrement())
+    email           String   @unique
+    password        String
+    username        String   @unique
+    canEdit         Boolean  @default(false)
+    editableCourses Course[] @relation(name: "editors")
+    ownedCourses    Course[] @relation(name: "courseOwner")
+
+    @@map("users")
+}

@@ -1,0 +1,13 @@
+$foreground-color: #161616;
+$background-color: #fafafa;
+$theme-blue: #5AA3DB;
+$theme-green: #50A84D;
+$theme-red: #D94525;
+
+:export {
+    themeRed: $theme-red;
+    themeGreen: $theme-green;
+    backgroundColor: $background-color;
+    themeBlue: $theme-blue;
+    foregroundColor: $foreground-color;
+}
