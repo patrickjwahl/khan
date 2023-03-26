@@ -1,10 +1,9 @@
+import { prisma } from "@/lib/db";
 import { useUser, userCanEditCourse } from "@/lib/user";
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest, context: { params: {id: string}}) {
 
-    const prisma = new PrismaClient();
     const requestData = await request.json();
 
     const courseId = parseInt(context.params.id);
@@ -25,8 +24,6 @@ export async function POST(request: NextRequest, context: { params: {id: string}
         const idToChange = modules[oldIndex].id;
         await prisma.module.update({where: {id: idToChange}, data: {index: newIndex}});
     }    
-
-    prisma.$disconnect();
 
     return NextResponse.json({code: 'OK'});
 }

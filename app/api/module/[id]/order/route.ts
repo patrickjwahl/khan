@@ -1,10 +1,8 @@
+import { prisma } from "@/lib/db";
 import { useUser, userCanEditCourse } from "@/lib/user";
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest, context: { params: {id: string}}) {
-
-    const prisma = new PrismaClient();
     const requestData = await request.json();
 
     const courseId = (await prisma.module.findFirst({ where: {id: parseInt(context.params.id)}}))?.courseId;
@@ -25,8 +23,6 @@ export async function POST(request: NextRequest, context: { params: {id: string}
         const idToChange = lessons[oldIndex].id;
         await prisma.lesson.update({where: {id: idToChange}, data: {index: newIndex}});
     }    
-
-    prisma.$disconnect();
 
     return NextResponse.json({code: 'OK'});
 }

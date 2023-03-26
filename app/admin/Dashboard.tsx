@@ -99,8 +99,9 @@ export default function Dashboard({ user, courses }: { user: User, courses: Cour
                             </Link>
                         );
                     })}
+                    {courses.length === 0 && <div style={{fontStyle: 'italic', textAlign: 'center'}}>No courses here!</div>}
                 </div>
-                <button onClick={toggleModal}>ADD A COURSE</button>
+                <button onClick={toggleModal}>CREATE A COURSE</button>
             </div>
             <div className={cn(styles.modal, {[styles.visible]: modalVisible})}>
                 <div>

@@ -93,6 +93,11 @@
     align-items: center;
     cursor: pointer;
     user-select: none;
+    box-shadow: 0px 5px 0 1px #434343;
+    border: 5px solid #434343;
+    position: relative;
+    top: -5px;
+    left: 0px;
 
     h4 {
         margin-bottom: 0.8rem;
@@ -107,7 +112,9 @@
     }
 
     &:active {
-        filter: brightness(80%);
+        box-shadow: none;
+        top: 0;
+        left: 0;
     }
 }
 
@@ -120,6 +127,7 @@
     background-color: rgba(variables.$foreground-color, 0.5);
     position: fixed;
     top: 0;
+    z-index: 100;
     left: 0;
     display: none;
     color: variables.$background-color;
@@ -188,7 +196,9 @@
 .radioContainer {
     display: flex;
     flex-direction: row;
-    gap: -2px;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.8rem;
     margin-bottom: 0.8rem;
     margin-top: 0.8rem;
 }
@@ -202,28 +212,16 @@
     label {
         background-color: transparent;
         color: variables.$background-color;
-        padding: 0.4rem 1.2rem;
+        padding: 0.4rem 0.8rem;
         border: 2px solid variables.$background-color;
-        border-left: none;
-        border-right: none;
         cursor: pointer;
         user-select: none;
+        border-radius: 10px;
+        font-size: 0.8rem;
 
         &:hover {
             background-color: rgba(variables.$theme-green, 0.5);
         }
-    }
-
-    &:first-child label {
-        border-left: 2px solid variables.$background-color !important;
-        border-bottom-left-radius: 10px;
-        border-top-left-radius: 10px;
-    }
-
-    &:last-child label {
-        border-right: 2px solid variables.$background-color !important;
-        border-bottom-right-radius: 10px;
-        border-top-right-radius: 10px;
     }
 
     input[type="radio"] {
@@ -257,9 +255,9 @@
     padding: 0;
     background: linear-gradient(to top left, variables.$foreground-color, rgba(variables.$foreground-color, 0.5));
     color: variables.$theme-red;
-    font-size: 8rem;
-    height: 9rem;
-    width: 9rem;
+    font-size: 3rem;
+    height: 4rem;
+    width: 4rem;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -270,9 +268,9 @@
     padding: 0;
     background: linear-gradient(to top left, variables.$foreground-color, rgba(variables.$foreground-color, 0.5));
     color: variables.$background-color;
-    font-size: 6rem;
-    height: 9rem;
-    width: 9rem;
+    font-size: 3rem;
+    height: 4rem;
+    width: 4rem;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -282,7 +280,7 @@
 .audioButtonsContainer {
     display: flex;
     flex-direction: row;
-    gap: 2.4rem;
+    gap: 1.6rem;
     margin-bottom: 0.8rem;
 }
 
@@ -292,11 +290,18 @@
     color: variables.$foreground-color;
     text-align: center;
     vertical-align: middle;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: scroll;
     margin: 1.6rem 0;
+    overflow: scroll;
 
     td {
-        border-top: 2px solid variables.$theme-blue;
+        border-bottom: 2px solid variables.$theme-blue;
+    }
+
+    th {
+        border-bottom: 2px solid variables.$theme-blue;
     }
 
     td, th {
@@ -323,12 +328,30 @@
         }
 
         &.info {
-            background-color: #dbeedb;
+            background-color: rgba(variables.$theme-blue, 0.5);
 
             &:hover {
                 background-color: #bfe1be;
             }
         }
+    }
+}
+
+.tableContainer {
+    max-height: 70vh;
+    overflow-y: scroll;
+    margin: 1.6rem 0;
+    position: relative;
+
+    th {
+        position: sticky;
+        top: 0;
+        background-color: variables.$background-color;
+        border-bottom: 2px solid variables.$theme-blue;
+    }
+
+    .lessonTable {
+        margin: 0;
     }
 }
 
@@ -379,6 +402,7 @@
     position: absolute;
     display: none;
     padding: 20px;
+    z-index: 20;
 
     .cancel {
         color: variables.$foreground-color;
@@ -429,5 +453,180 @@
 
     img {
         object-fit: cover;
+    }
+}
+
+.lessonContentContainer {
+    width: 100%;
+    padding: 0 1.6rem;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.lessonViewContainer {
+
+    color: variables.$background-color;
+    overflow: hidden;
+
+    background-color: variables.$theme-blue;
+    padding: 2rem;
+    border-radius: 20px;
+    flex: 2;
+}
+
+.editor {
+    background-color: variables.$theme-blue;
+    border-radius: 20px;
+    padding: 2rem;
+    flex: 1;
+    min-width: 450px;
+
+    color: variables.$background-color;
+
+    
+    form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+
+        textarea {
+            width: 100%;
+            padding: 0.4rem;
+            border: none;
+            border-radius: 8px;
+            height: 8rem;
+        }
+
+        input[type=submit] {
+            font-size: 1rem;
+            padding: 0 0.8rem;
+        }
+    }
+}
+
+.formTopRow {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+
+    button {
+        font-size: 1rem;
+        margin-right: 0.2rem;
+        padding: 0 0.8rem;
+    }
+}
+
+.editorsContainer {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.editorContainer {
+    background-color: variables.$theme-green;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.8rem;
+    gap: 0.8rem;
+    border-radius: 10px;
+    margin-top: 0.4rem;
+}
+
+.addUserForm {
+    display: flex;
+    flex-direction: row;
+    gap: 0.4rem;
+    margin-top: 0.8rem;
+    align-items: center;
+
+    label { 
+        display: flex;
+        gap: 0.4rem;
+        align-items: center;
+        width: fit-content;
+        white-space: nowrap;
+    }
+}
+
+.tabsContainer {
+    background-color: #dadada;
+    padding: 1.6rem 0;
+    margin: 0 1.6rem;
+    margin-bottom: 3rem;
+    position: relative;
+    z-index: 50;
+    border-radius: 20px;
+    border-top-left-radius: 0;
+    margin-top: 2rem;
+    width: 90%;
+}
+
+.tabButtonsContainer {
+    position: absolute;
+    top: -3rem;
+}
+
+.tabButton {
+    border-radius: 0;
+    color: variables.$foreground-color;
+    background-color: #bababa;
+    height: 3rem;
+    width: 200px;
+
+    &:first-child {
+        border-top-left-radius: 10px;
+    }
+
+    &:last-child {
+        border-top-right-radius: 10px;
+    }
+
+    &.active {
+        background-color: #dadada;
+    }
+}
+
+.wordsListContainer {
+    max-height: 85vh;
+    overflow: scroll;
+}
+
+.wordContainer {
+    background-color: variables.$background-color;
+    color: variables.$foreground-color;
+    margin: 0.4rem 0;
+    padding: 0.4rem;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    &.active {
+        background-color: rgba(variables.$background-color, 0.5);
+    }
+
+    &:hover:not(.active) {
+        background-color: #dadada;
+    }
+}
+
+.tableImage {
+    height: 50px;
+    width: 50px;
+    position: relative;
+
+    img {
+        object-fit: cover;
+        clip-path: circle(50%);
     }
 }

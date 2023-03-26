@@ -1,12 +1,14 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import LessonDashboard from "./LessonDashboard";
 import { useUser, userCanEditCourse } from "@/lib/user";
 
-export default async function Module({ params }: { params: { id: string }}) {
+export async function generateMetadata({ params }: {params: {id: string}}) {
+    const lesson = await prisma.lesson.findFirst({where: {id: parseInt(params.id)}});
+    return {title: `${lesson?.title} | Genghis Khan Academy`};
+}
 
-    console.log('start');
+export default async function Lesson({ params }: { params: { id: string }}) {
 
-    const prisma = new PrismaClient();
     const id = parseInt(params.id);
 
     const user = await useUser();
@@ -25,12 +27,22 @@ export default async function Module({ params }: { params: { id: string }}) {
                     index: 'asc'
                 },
                 include: {
+                    wordHints: {
+                        include: {
+                            wordEntity: true
+                        }
+                    },
                     feedbackRules: true
                 }
             },
             module: {
                 include: {
-                    course: true
+                    course: true,
+                    questions: {
+                        where: {
+                            lessonId: null
+                        }
+                    }
                 }
             }
         }
@@ -44,9 +56,5 @@ export default async function Module({ params }: { params: { id: string }}) {
         throw new Error("You're not allowed to see that!");
     }
 
-    prisma.$disconnect();
-
-    console.log('end');
-
-    return <LessonDashboard lesson={lesson} />
+    return <LessonDashboard initLesson={lesson} />
 }

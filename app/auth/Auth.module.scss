@@ -1,0 +1,116 @@
+@use '../v.module.scss';
+
+.container {
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    h5 {
+        font-size: 1rem;
+    }
+
+    button {
+        width: 100%;
+    }
+
+    .bottomContainer, form {
+        width: 360px;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .bottomContainer {
+
+
+        border: 2px solid v.$superdarkbackground;
+        border-radius: 10px;
+        padding-top: 0px;
+        margin-top: 2.4rem;
+
+        a {
+            width: 100%;
+        }
+
+        > h5 {
+            margin-bottom: 0.8rem;
+            background-color: v.$background;
+            position: relative;
+            top: -0.7rem;
+            padding: 0 0.8rem;
+        }
+    }
+
+    form {
+        margin-top: 6.4rem;
+
+        background-color: v.$darkbackground;
+        padding: 2rem;
+        border-radius: 10px;
+
+        > div {
+            width: 100%;
+            position: relative;
+            overflow: visible;
+
+            .errorMessage {
+                position: absolute;
+                top: 0;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                padding: 0;
+                left: 100%;
+                height: 100%;
+                white-space: nowrap;
+                display: flex;
+                align-items: center;
+                filter: drop-shadow(0px 3px 3px v.$lightforeground);
+
+                > div {
+                    background-color: v.$orange;
+                    color: v.$background;
+                    border-radius: 100px;
+                    padding: 0.2rem 1.6rem;
+                    padding-left: 2.4rem;
+                    font-size: 0.8rem;
+                    // box-shadow: 0 0 5px 0 v.$lightforeground;
+                    clip-path: polygon(10% 0%,
+                                       100% 0%,
+                                       100% 100%,
+                                       10% 100%,
+                                       0% 50%);
+                }
+            }
+        }
+
+        input[type=text], input[type=email], input[type=password] {
+            padding: 0.8rem;
+            border-radius: 10px;
+            outline: none;
+            box-sizing: border-box;
+            width: 100%;
+            border: none;
+            background-color: v.$superlightpink;
+            box-shadow: 0 2px 0 v.$darkpink inset;
+
+            &::placeholder {
+                color: v.$lightforeground;
+            }
+        }
+
+        input[type=submit] {
+            margin-top: 2rem;
+            width: 100%;
+        }
+    }
+
+    h4 {
+        margin: 0;
+        font-weight: 800;
+        margin-bottom: 1.2rem;
+    }
+}

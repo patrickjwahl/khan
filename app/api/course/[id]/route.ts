@@ -1,10 +1,10 @@
+import { prisma } from "@/lib/db";
 import { useUser, userCanEditCourse } from "@/lib/user";
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest, context: { params: {id: string}}) {
 
-    const prisma = new PrismaClient();
     const requestData = await request.json();
 
     const courseId = parseInt(context.params.id);
@@ -37,8 +37,6 @@ export async function DELETE(request: NextRequest, context: { params: { id: stri
     }
 
     await prisma.course.delete({where: {id: courseId}});
-
-    prisma.$disconnect();
 
     return NextResponse.json({code: 'OK'});
 

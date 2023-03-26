@@ -1,8 +1,8 @@
 'use client'
 
-import { Course, Prisma } from "@prisma/client";
+import { Course, Prisma, Question, Word } from "@prisma/client";
 import styles from '../../Admin.module.scss';
-import { FormEventHandler, useEffect, useState } from "react";
+import { FormEventHandler, MouseEventHandler, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ClipLoader } from "react-spinners";
 import { TiDelete } from "react-icons/ti";
@@ -16,17 +16,28 @@ import Link from "next/link";
 import { useS3Upload } from "next-s3-upload";
 import Image from "next/image";
 import { BsBroadcastPin } from "react-icons/bs";
+import ScreenDisplay from "./ScreenDisplay";
+import WordDisplay from "./WordDisplay";
+import { QuestionWithFeedback as ScreenDisplayQuestionWithFeedback } from "./ScreenDisplay";
 
-type ModuleWithLessonsAndCourse = Prisma.ModuleGetPayload<{include: { lessons: { include: { questions: true }}, course: true }}>;
+export type ModuleWithLessonsAndCourse = Prisma.ModuleGetPayload<{include: { lessons: { include: { questions: true }}, course: true }}>;
+export type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true, lesson: true, wordHints: { include: { wordEntity: true }}}}>;
 
-export default function CourseDashboard({ module }: { module: ModuleWithLessonsAndCourse }) {
+export default function ModuleDashboard({ initModule, nextId, prevId, initModuleQuestions, words, wordsToQuestions }: { initModule: ModuleWithLessonsAndCourse, nextId?: number, prevId?: number, initModuleQuestions: QuestionWithFeedback[], words: Word[], wordsToQuestions: {[id: number]: Question[]} }) {
+
+    const [ module, setModule ] = useState(initModule);
+    const [ moduleQuestions, setModuleQuestions ] = useState(initModuleQuestions);
 
     const [ modalVisible, setModalVisible ] = useState(false);
     const [ title, setTitle ] = useState('');
 
     const [ isSubmitting, setIsSubmitting ] = useState(false);
 
+    const [ forceSelectedQuestion, setForceSelectedQuestion ] = useState<null | Question>(null);
+
     const [ newTitle, setNewTitle ] = useState('');
+
+    const [ notesDisplay, setNotesDisplay ] = useState('');
     
     const defaultOrder = Array.from({length: module.lessons.length}, (x, i) => i);
     const [ order, setOrder ] = useState(defaultOrder);
@@ -35,8 +46,12 @@ export default function CourseDashboard({ module }: { module: ModuleWithLessonsA
     const [ upIndex, setUpIndex ] = useState(-1);
     const [ downIndex, setDownIndex ] = useState(-1);
 
+    const [ activeTab, setActiveTab ] = useState(0);
+
     const router = useRouter();
     const { FileInput, openFileDialog, uploadToS3 } = useS3Upload();
+
+    const notesRef = useRef<HTMLDivElement>(null);
 
     const breadcrumbs: Breadcrumb[] = [
         {
@@ -52,6 +67,43 @@ export default function CourseDashboard({ module }: { module: ModuleWithLessonsA
             link: `/admin/module/${module.id}`
         },
     ];
+
+
+    const fetchData = async () => {
+        const res = await fetch(`/api/module/${module.id}`);
+        const data = await res.json();
+        setModule(data.module);
+        setModuleQuestions(data.moduleQuestions);
+        setOrder(defaultOrder);
+    };
+
+    const setSelectedQuestionFromWords = (question: Question) => {
+        setForceSelectedQuestion(question);
+        setActiveTab(0);
+    };
+
+    const ackSelectedQuestion = () => {
+        setForceSelectedQuestion(null);
+    };
+
+    const notesClicked = (question: ScreenDisplayQuestionWithFeedback, e: React.MouseEvent<HTMLButtonElement>) => {
+
+        e.stopPropagation();
+
+        if (!question.notes || !notesRef.current) return;
+
+        setNotesDisplay(question.notes);
+        notesRef.current.style.display = 'block';
+        notesRef.current.style.top = `${e.pageY}px`;
+        notesRef.current.style.left = `${e.pageX}px`;
+
+        console.log('hello');
+    }
+
+    const hideNotes = () => {
+        if (!notesRef.current) return;
+        notesRef.current.style.display = 'none';
+    }
 
     useEffect(() => {
         if (modalVisible) {
@@ -134,7 +186,8 @@ export default function CourseDashboard({ module }: { module: ModuleWithLessonsA
         });
 
         const data = await res.json();
-        location.reload();
+        fetchData();
+        setUnsavedChanges(false);
     };
 
     const submitClicked: FormEventHandler<HTMLFormElement> = async e => {
@@ -144,13 +197,21 @@ export default function CourseDashboard({ module }: { module: ModuleWithLessonsA
 
         setIsSubmitting(true);
 
+        const index = module.lessons.length > 0 ? Math.max(...module.lessons.map(q => q.index)) + 1 : 0;
+
         const res = await fetch('/api/lesson', {
             method: 'POST',
-            body: JSON.stringify({ moduleId: module.id, title }),
+            body: JSON.stringify({ 
+                moduleId: module.id, 
+                title,
+                index: index
+            }),
             headers: { 'Content-Type': 'application/json' }
         });
 
         const data = await res.json();
+
+        setModalVisible(false);
 
         if (data.code === 'OK') {
             router.push(`/admin/lesson/${data.redirectId}`);
@@ -159,7 +220,7 @@ export default function CourseDashboard({ module }: { module: ModuleWithLessonsA
         }
     };
 
-    const updateTitle = async e => {
+    const updateTitle: FormEventHandler = async e => {
         e.preventDefault();
         if (!newTitle) return;
 
@@ -176,10 +237,10 @@ export default function CourseDashboard({ module }: { module: ModuleWithLessonsA
         });
 
         const data = await res.json();
-        location.reload();
+        fetchData();
     };
 
-    const deleteModule = async e => {
+    const deleteModule: MouseEventHandler = async e => {
         e.preventDefault();
 
         if (!window.confirm("Are you sure you want to delete this module and all its lessons?")) return;
@@ -208,7 +269,7 @@ export default function CourseDashboard({ module }: { module: ModuleWithLessonsA
         });
 
         const data = await res.json();
-        location.reload();
+        fetchData();
     };
 
     const publishCourse = async (e: React.MouseEvent<HTMLButtonElement>, should: boolean) => {
@@ -229,7 +290,7 @@ export default function CourseDashboard({ module }: { module: ModuleWithLessonsA
         });
 
         const data = await res.json();
-        location.reload();
+        fetchData();
     };
 
     return (
@@ -237,11 +298,15 @@ export default function CourseDashboard({ module }: { module: ModuleWithLessonsA
             <Breadcrumbs trail={breadcrumbs} />
             <h6>MODULE</h6>
             <h2>{module.title.toUpperCase()}</h2>
-            {module.image ? (
-            <div style={{marginTop: '-1.2rem', marginBottom: '1.2rem'}} className={styles.imageContainer}>
-                <Image fill src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN}/images/${module.image}`} alt="Module image" />
+            <div style={{display: 'flex', gap: '200px', height: '80px'}}>
+                {prevId ? <Link style={{width: '150px'}}  href={`/admin/module/${prevId}`}>{'<< '} Previous Module</Link> : <div style={{width: '150px'}}></div>}
+                {module.image ? (
+                <div style={{marginTop: '-1.2rem', marginBottom: '1.2rem'}} className={styles.imageContainer}>
+                    <Image fill src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN}/images/${module.image}`} alt="Module image" />
+                </div>
+                ) : <div style={{width: '80px'}}></div>}
+                {nextId ? <Link style={{width: '150px'}} href={`/admin/module/${nextId}`}>Next Module {' >>'}</Link> : <div style={{width: '150px'}}></div>}
             </div>
-            ) : (null)}
             <div style={{backgroundColor: module.published ? variables.themeBlue : variables.themeRed, padding: '0.4rem', color: variables.backgroundColor, borderRadius: '8px', fontSize: '0.8rem', marginBottom: '0.8rem', fontWeight: module.published ? 'bold' : 'normal'}}>{module.published ? <><BsCheckCircle /> PUBLISHED</> : 'UNDER CONSTRUCTION'}</div>
             <form onSubmit={updateTitle} style={{fontSize: '12px', display: 'flex', flexDirection: 'row', gap: '0.8rem', marginBottom: '2.4rem'}}>
                 <input type='text' placeholder="New title..." value={newTitle} onChange={e => setNewTitle(e.target.value)} />
@@ -275,7 +340,7 @@ export default function CourseDashboard({ module }: { module: ModuleWithLessonsA
                         </thead>
                         <tbody>
                         {order.map(index => module.lessons[index]).map((lesson, index) => {
-                            const badQuestions = lesson.questions.filter(q => q.type === 'LISTENING' && !q.recording).length;
+                            const badQuestions = lesson.questions.filter(q => q.type === 'QUESTION' && !q.recording).length;
 
                             return (
                                 <tr key={lesson.id} className={cn({[styles.up]: upIndex === index, [styles.down]: downIndex === index})}>
@@ -296,6 +361,18 @@ export default function CourseDashboard({ module }: { module: ModuleWithLessonsA
                     {unsavedChanges ? <button onClick={updateOrder} className='important' style={{backgroundColor: variables.themeGreen}}>SAVE ORDER</button> : (null)}
                 </div>
             </div>
+            <div className={styles.tabsContainer}>
+                <div className={styles.tabButtonsContainer}>
+                    <button onClick={() => setActiveTab(0)} className={cn(styles.tabButton, {[styles.active]: activeTab === 0})}>SCREENS</button>
+                    <button onClick={() => setActiveTab(1)} className={cn(styles.tabButton, {[styles.active]: activeTab === 1})}>WORDS</button>
+                </div>
+                <div style={{display: activeTab === 0 ? 'block' : 'none'}}>
+                    <ScreenDisplay fetchData={fetchData} questions={moduleQuestions} module={module} notesClicked={notesClicked} forceSelectedQuestion={forceSelectedQuestion} ackSelectedQuestion={ackSelectedQuestion} />
+                </div>
+                <div style={{display: activeTab === 1 ? 'block' : 'none'}}>
+                    <WordDisplay initWords={words} module={module} initWordsToQuestions={wordsToQuestions} setQuestion={setSelectedQuestionFromWords} />
+                </div>
+            </div>
             <div className={cn(styles.modal, {[styles.visible]: modalVisible})}>
                 <div>
                     <form onSubmit={submitClicked}>
@@ -306,6 +383,10 @@ export default function CourseDashboard({ module }: { module: ModuleWithLessonsA
                     </form>
                     <button className={styles.cancel} onClick={toggleModal}><TiDelete /></button>
                 </div>
+            </div>
+            <div ref={notesRef} className={styles.notesDisplay}>
+                {notesDisplay}
+                <button onClick={hideNotes} className={styles.cancel}><TiDelete /></button>
             </div>
         </main>
     );

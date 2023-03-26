@@ -1,10 +1,8 @@
+import { prisma } from "@/lib/db";
 import { useUser, userCanEditCourse } from "@/lib/user";
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-
-    const prisma = new PrismaClient();
     const requestData = await request.json();
 
     const courseId = requestData.courseId;
@@ -17,11 +15,10 @@ export async function POST(request: NextRequest) {
     const module = await prisma.module.create({
         data: {
             title: requestData.title,
-            courseId: courseId
+            courseId: courseId,
+            index: requestData.index
         }
     });
-
-    prisma.$disconnect();
 
     return NextResponse.json({code: 'OK', redirectId: module.id});
 }

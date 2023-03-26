@@ -1,35 +1,43 @@
+import { prisma } from "@/lib/db";
 import { useUser, userCanEditCourse } from "@/lib/user";
-import { PrismaClient, FeedbackRule } from "@prisma/client";
+import { FeedbackRule, WordHint } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-
-    const prisma = new PrismaClient();
     const requestData = await request.json();
 
     const user = await useUser();
 
     let courseId;
 
-    const question = await prisma.question.findFirst({where: {id: requestData.id}, include: {lesson: {include: {module: true}}}});
+    const question = await prisma.question.findFirst({where: {id: requestData.id}, include: {module: true, lesson: {include: {module: true}}}});
 
     if (!question) {
-        const lesson = await prisma.lesson.findFirst({where: {id: requestData.lessonId}, include: {module: true}});
-        if (!lesson) {
-            return NextResponse.json({code: 'NO_SUCH_LESSON'});
+        const module = await prisma.module.findFirst({where: {id: requestData.moduleId}});
+        if (!module) {
+            return NextResponse.json({code: 'NO_SUCH_MODULE'});
         }
 
-        courseId = lesson.module.courseId;
+        courseId = module.courseId;
     } else {
-        courseId = question.lesson.module.courseId;
+        courseId = question.module.courseId;
     }
 
     if (!user || !user.canEdit || !(await userCanEditCourse(user.id, courseId, prisma))) {
         return NextResponse.json({'code': 'UNAUTHORIZED'});
     }
 
-    const { feedbackRules, ...requestDataNoFeedback } = requestData;
-    const {id: _, ...requestDataNoId} = requestDataNoFeedback;
+    const { feedbackRules, wordHints, ...requestDataNoFeedback } = requestData;
+    const {id, ...requestDataNoId} = requestDataNoFeedback;
+
+    let targetChanged = false;
+
+    const existingQuestion = await prisma.question.findFirst({where: {id}});
+    if (!existingQuestion || existingQuestion.target?.split('\n')[0] !== requestData.target?.split('\n')[0]) {
+        if (requestData.type === 'QUESTION') {
+            targetChanged = true;
+        }
+    }
 
     const updatedQuestion = await prisma.question.upsert({
         where: {
@@ -48,26 +56,68 @@ export async function POST(request: NextRequest) {
     await prisma.feedbackRule.deleteMany({where: {questionId: updatedQuestion.id}});
     await prisma.feedbackRule.createMany({data: feedbackRuleCreates});
 
-    prisma.$disconnect();
+    await prisma.wordHint.deleteMany({where: {questionId: updatedQuestion.id}});
+    if (targetChanged && updatedQuestion.target) {
+
+        const newWords = updatedQuestion.target.split('\n')[0].replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").split(' ');
+        for (const wordString of newWords) {
+            const guessFromWordHints = await prisma.wordHint.findFirst({where: {question: {lesson: {module: {courseId: courseId}}}, wordString: wordString.toLowerCase(), wordEntityId: {not: null}}});
+            if (guessFromWordHints) {
+                await prisma.wordHint.create({
+                    data: {
+                        wordString: wordString.toLowerCase(),
+                        questionId: updatedQuestion.id,
+                        wordEntityId: guessFromWordHints.wordEntityId
+                    }
+                })
+            } else {
+                const guessFromWords = await prisma.word.findFirst({where: {module: { courseId: courseId}, target: wordString.toLowerCase()}});
+                if (guessFromWords) {
+                    await prisma.wordHint.create({
+                        data: {
+                            wordString: wordString.toLowerCase(),
+                            questionId: updatedQuestion.id,
+                            wordEntityId: guessFromWords.id
+                        }
+                    });
+                } else {
+                    await prisma.wordHint.create({
+                        data: {
+                            wordString: wordString.toLowerCase(),
+                            questionId: updatedQuestion.id,
+                            wordEntityId: null
+                        }
+                    });
+                }
+            }
+        }
+    } else {
+        const wordHintCreates = wordHints.map((wordHint: WordHint) => ({
+            questionId: wordHint.questionId,
+            wordString: wordHint.wordString.toLowerCase(),
+            wordEntityId: wordHint.wordEntityId
+        }));
+
+        await prisma.wordHint.createMany({data: wordHintCreates});
+    }
 
     return NextResponse.json({code: 'OK', questionId: updatedQuestion.id});
 }
 
 export async function DELETE(request: NextRequest) {
-    const prisma = new PrismaClient();
     const requestData = await request.json();
 
     const user = await useUser();
 
     let courseId;
 
-    const question = await prisma.question.findFirst({where: {id: requestData.id}, include: {lesson: {include: {module: true}}}});
+    const question = await prisma.question.findFirst({where: {id: requestData.id}, include: {module: true, lesson: {include: {module: true}}}});
 
     if (!question) {
         return NextResponse.json({code: 'NO_SUCH_QUESTION'});
     }
 
-    courseId = question.lesson.module.courseId;
+    courseId = question.module.courseId;
 
     if (!user || !user.canEdit || !(await userCanEditCourse(user.id, courseId, prisma))) {
         return NextResponse.json({'code': 'UNAUTHORIZED'});

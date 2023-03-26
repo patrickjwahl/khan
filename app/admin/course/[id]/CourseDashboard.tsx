@@ -1,6 +1,6 @@
 'use client'
 
-import { Course, Module, Prisma } from "@prisma/client";
+import { Course, Module, Prisma, PrismaClient } from "@prisma/client";
 import styles from '../../Admin.module.scss';
 import React, { ChangeEvent, ChangeEventHandler, FormEventHandler, MouseEventHandler, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -15,10 +15,15 @@ import { FaArrowCircleDown, FaArrowCircleUp, FaSkullCrossbones } from "react-ico
 import { useS3Upload } from 'next-s3-upload';
 import Image from "next/image";
 import { BsBroadcastPin } from "react-icons/bs";
+import { User } from "@/lib/user";
+import { User as PrismaUser } from '@prisma/client';
 
-type CourseWithModules = Prisma.CourseGetPayload<{include: { modules: { include: {lessons: true }}}}>;
+type CourseWithModules = Prisma.CourseGetPayload<{include: { owner: true, editors: true, modules: { include: {lessons: true }}}}>;
 
-export default function CourseDashboard({ course, badQuestionsPerModule }: { course: CourseWithModules, badQuestionsPerModule: {[id: number]: number}}) {
+export default function CourseDashboard({ course, badQuestionsPerModule, user }: { course: CourseWithModules, badQuestionsPerModule: {[id: number]: number}, user: User}) {
+
+    console.log('UF');
+    console.log(user);
 
     const [ modalVisible, setModalVisible ] = useState(false);
     const [ title, setTitle ] = useState('');
@@ -31,6 +36,9 @@ export default function CourseDashboard({ course, badQuestionsPerModule }: { cou
     const [ unsavedChanges, setUnsavedChanges ] = useState(false);
     const [ upIndex, setUpIndex ] = useState(-1);
     const [ downIndex, setDownIndex ] = useState(-1);
+
+    const [ newUser, setNewUser ] = useState('');
+    const [ newUserError, setNewUserError ] = useState(false);
 
     const [ newTitle, setNewTitle ] = useState('');
 
@@ -138,9 +146,16 @@ export default function CourseDashboard({ course, badQuestionsPerModule }: { cou
 
         setIsSubmitting(true);
 
+        const index = course.modules.length > 0 ? Math.max(...course.modules.map(q => q.index)) + 1 : 0;
+        console.log('poop');
+        console.log(index);
+
         const res = await fetch('/api/module', {
             method: 'POST',
-            body: JSON.stringify({ title, courseId: course.id }),
+            body: JSON.stringify({ 
+                title, 
+                courseId: course.id,
+                index: index}),
             headers: { 'Content-Type': 'application/json' }
         });
 
@@ -153,7 +168,7 @@ export default function CourseDashboard({ course, badQuestionsPerModule }: { cou
         }
     };
 
-    const updateLanguage = async e => {
+    const updateLanguage: FormEventHandler = async e => {
 
         e.preventDefault();
         if (!newTitle) return;
@@ -191,7 +206,7 @@ export default function CourseDashboard({ course, badQuestionsPerModule }: { cou
         location.reload();
     }
 
-    const deleteCourse = async e => {
+    const deleteCourse: MouseEventHandler = async e => {
         e.preventDefault();
 
         if (!window.confirm("Are you sure you want to delete this course and all its modules?")) return;
@@ -244,6 +259,50 @@ export default function CourseDashboard({ course, badQuestionsPerModule }: { cou
         location.reload();
     };
 
+    const addEditor: FormEventHandler = async (e) => {
+        e.preventDefault();
+
+        const payload = {
+            username: newUser
+        };
+
+        const res = await fetch(`/api/course/${course.id}/editor`, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+
+        if (data.code === 'NO_SUCH_USER') {
+            setNewUserError(true);
+            return;
+        }
+
+        location.reload();
+    }
+
+    const removeEditor = async (editor: PrismaUser) => {
+
+        const payload = {
+            id: editor.id
+        };
+
+        const res = await fetch(`/api/course/${course.id}/editor`, {
+            method: 'DELETE',
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+
+        location.reload();
+    }
+
     return (
         <main className={styles.container}>
             <Breadcrumbs trail={breadcrumbs} />
@@ -273,12 +332,14 @@ export default function CourseDashboard({ course, badQuestionsPerModule }: { cou
                             <col />
                             <col />
                             <col />
+                            <col />
                             <col style={{width: '5%'}} />
                             <col style={{width: '5%'}} />
                             <col style={{width: '5%'}} />
                         </colgroup>
                         <thead>
                         <tr>
+                            <th></th>
                             <th>Title</th>
                             <th>Lessons</th>
                             <th><AiFillSound /> !</th>
@@ -294,6 +355,7 @@ export default function CourseDashboard({ course, badQuestionsPerModule }: { cou
                             return (
                                 <React.Fragment key={module.id}>
                                 <tr className={cn({[styles.up]: upIndex === index, [styles.down]: downIndex === index})}>
+                                    <td>{module.image && <div className={styles.tableImage}><Image fill src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN}/images/${module.image}`} alt="Module image" /></div>}</td>
                                     <td style={{fontWeight: 'bold'}}>{module.title}</td>
                                     <td>{module.lessons.length}</td>
                                     <td style={{color: badQuestionsPerModule[module.id] > 0 ? variables.themeRed : 'inherit'}}>{badQuestionsPerModule[module.id]}</td>
@@ -303,17 +365,44 @@ export default function CourseDashboard({ course, badQuestionsPerModule }: { cou
                                     <td><button onClick={() => decreaseIndex(index)} className={styles.iconButton}><FaArrowCircleUp /></button></td>
                                     <td><button onClick={() => increaseIndex(index)} className={styles.iconButton}><FaArrowCircleDown /></button></td>
                                 </tr>
-                                {module.isCheckpoint ? <tr><td style={{backgroundColor: variables.themeGreen, fontSize: '0.8rem', padding: '0.2rem'}} colSpan={8}>CHECKPOINT!</td></tr> : (null)}
+                                {module.isCheckpoint ? <tr><td style={{backgroundColor: variables.themeGreen, fontSize: '0.8rem', padding: '0.2rem'}} colSpan={9}>CHECKPOINT!</td></tr> : (null)}
                                 </React.Fragment>
                             );
                         })}
                         </tbody>
                     </table>
-                ) : (<div className={styles.noScreens}>No lessons yet!</div>)}
+                ) : (<div className={styles.noScreens}>No modules yet!</div>)}
                 <div style={{display: 'flex', width: '100%', justifyContent: 'center', gap: '20px'}}>
                     <button onClick={toggleModal}>ADD A MODULE</button>
                     {unsavedChanges ? <button onClick={updateOrder} className='important' style={{backgroundColor: variables.themeGreen}}>SAVE ORDER</button> : (null)}
                 </div>
+            </div>
+            <div className={styles.contentContainer}>
+                <h5>OWNER</h5>
+                <div className={styles.editorContainer}>
+                    <div>{course.owner.username}</div>
+                </div>
+                <h5 style={{marginTop: '1rem'}}>EDITORS</h5>
+                <div className={styles.editorsContainer}>
+                    {course.editors.map(editor => {
+                        return (
+                            <div className={styles.editorContainer}>
+                                <div>{editor.username}</div>
+                                {course.ownerId === user.id && editor.username !== user.username ? (
+                                    <button onClick={() => removeEditor(editor)}>REVOKE ACCESS</button>
+                                ) : (null)}
+                            </div>
+                        );
+                    })}
+                </div>
+                <form className={styles.addUserForm} onSubmit={addEditor}>
+                    <label>
+                        Add an editor:
+                        <input type="text" placeholder="Username" value={newUser} onChange={e => {if (newUserError) setNewUserError(false); setNewUser(e.target.value)}} />
+                    </label>
+                    <input type="submit" value="Grant Access" />
+                </form>
+                {newUserError ? <div>That user doesn't exist!</div> : (null) }
             </div>
             <div className={cn(styles.modal, {[styles.visible]: modalVisible})}>
                 <div>

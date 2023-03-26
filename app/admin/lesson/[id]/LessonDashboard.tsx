@@ -2,12 +2,12 @@
 
 import { Course, FeedbackRule, Prisma, Question, QuestionType } from "@prisma/client";
 import styles from '../../Admin.module.scss';
-import { FormEventHandler, MouseEventHandler, useEffect, useRef, useState } from "react";
+import React, { FormEventHandler, MouseEventHandler, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ClipLoader } from "react-spinners";
 import { TiDelete } from "react-icons/ti";
 import { FaSkullCrossbones, FaStop } from 'react-icons/fa';
-import { BsRecordCircleFill } from "react-icons/bs";
+import { BsPencilFill, BsRecordCircleFill } from "react-icons/bs";
 import { BsFillPlayCircleFill } from 'react-icons/bs';
 import { AiFillSound } from 'react-icons/ai';
 import { GiNotebook } from 'react-icons/gi';
@@ -23,39 +23,61 @@ import variables from '../../../_variables.module.scss';
 import audioRecorder from "@/lib/audio";
 import InfoEditor from "./InfoEditor";
 import Breadcrumbs, { Breadcrumb } from "../../Breadcrumbs";
+import WordHintEditor from "./WordHintEditor";
 
-type LessonWithEverything = Prisma.LessonGetPayload<{include: { module: { include: { course: true }}, questions: {include: { feedbackRules: true }} }}>;
-type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true}}>;
+type LessonWithEverything = Prisma.LessonGetPayload<{include: { module: { include: { course: true, questions: true }}, questions: {include: { feedbackRules: true, wordHints: {include: {wordEntity: true}} }} }}>;
+type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHints: {include: {wordEntity: true}}}}>;
+export type WordHint = Prisma.WordHintGetPayload<{include: {wordEntity: true}}>;
 
-const typeToIcon = (type: QuestionType) => {
+export const typeToIcon = (type: QuestionType) => {
     switch (type) {
         case 'INFO':
             return <GoLightBulb />;
-        case 'LISTENING':
-            return <AiFillSound />;
-        case 'NATIVE_TO_TARGET':
-            return <BsArrowRight />;
-        case 'TARGET_TO_NATIVE':
-            return <BsArrowLeft />;
+        case 'QUESTION':
+            return <BsPencilFill />;
     }
 };
 
-export default function CourseDashboard({ lesson }: { lesson: LessonWithEverything }) {
+export const playTableRecording = (q: Question) => {
+
+    const recordingURL = q.recording;
+
+    if (!recordingURL) return;
+    fetch(recordingURL).then(async res => {
+        const blob = await res.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+        audio.play();
+    });
+};
+
+export default function LessonDashboard({ initLesson }: { initLesson: LessonWithEverything }) {
+
+    const [ lesson, setLesson ] = useState(initLesson);
 
     const [ modalVisible, setModalVisible ] = useState(false);
-    const [ type, setType ] = useState<QuestionType>('NATIVE_TO_TARGET');
+    const [ type, setType ] = useState<QuestionType>('QUESTION');
     const [ questionId, setQuestionId ] = useState<number | null>(null);
-    const [ question, setQuestion ] = useState('');
-    const [ answers, setAnswers ] = useState('');
+    const [ target, setTarget ] = useState('');
+    const [ native, setNative ] = useState('');
     const [ notes, setNotes ] = useState('');
     const [ feedbackRules, setFeedbackRules ] = useState<FeedbackRule[]>([]);
+    const [ wordHints, setWordHints ] = useState<WordHint[]>([]);
+    const [ forwardEnabled, setForwardEnabled ] = useState(true);
+    const [ backwardEnabled, setBackwardEnabled] = useState(true);
+    const [ recordingEnabled, setRecordingEnabled ] = useState(true);
     const [ index, setIndex ] = useState(-1);
+    const [ firstPass, setFirstPass] = useState(true);
     const [ info, setInfo ] = useState('');
     const [ infoTitle, setInfoTitle ] = useState('');
     const [ audioBlob, setAudioBlob ] = useState<null | Blob>(null);
 
+    const [ selectedQuestion, setSelectedQuestion ] = useState(-1);
+
     const defaultOrder = Array.from({length: lesson.questions.length}, (x, i) => i);
     const [ order, setOrder ] = useState(defaultOrder);
+
+    const [ isSubmitting, setIsSubmitting ] = useState(false);
 
     const [ newTitle, setNewTitle ] = useState('');
     
@@ -90,27 +112,19 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
         }
     ];
 
-    useEffect(() => {
-        if (modalVisible) {
-            document.body.style.top = `-${window.scrollY}px`;
-            document.body.style.position = 'fixed';
-            document.body.style.left = '0px';
-            document.body.style.width = '100%';
-            document.body.style.overflow = 'hidden';
-        } else {
-            const scrollY = document.body.style.top;
-            document.body.style.overflow = 'auto';
-            document.body.style.position = '';
-            document.body.style.height = 'auto';
-            document.body.style.top = '';
-            window.scrollTo(0, parseInt(scrollY || '0') * -1);
-        }
-    }, [modalVisible]);
+    const fetchData = async () => {
+        const res = await fetch(`/api/lesson/${lesson.id}`);
+        const data = await res.json();
+
+        const newDefaultOrder = Array.from({length: data.lesson.questions.length}, (x, i) => i);
+        setOrder(newDefaultOrder);
+        setLesson(data.lesson);
+    };
 
     const toggleModal = () => {
         if (modalVisible) {
-            setQuestion('');
-            setAnswers('');
+            setTarget('');
+            setNative('');
             setFeedbackRules([]);
             setQuestionId(null);
             setIndex(-1);
@@ -121,6 +135,21 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
         }
         setModalVisible(!modalVisible);
     };
+
+    const newQuestion = () => {
+        setTarget('');
+        setNative('');
+        setFeedbackRules([]);
+        setQuestionId(null);
+        setIndex(-1);
+        setNotes('');
+        setWordHints([]);
+        setFirstPass(true);
+        setInfo('');
+        setInfoTitle('');
+        setAudioBlob(null);
+        setSelectedQuestion(-1);
+    }
 
     const convertBlobToURL = (blob: Blob | null): Promise<string | null> | null => {
 
@@ -135,7 +164,9 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
         });
     }
 
-    const notesClicked = (question: QuestionWithFeedback, e: MouseEvent) => {
+    const notesClicked = (question: Question, e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+
         if (!question.notes || !notesRef.current) return;
 
         setNotesDisplay(question.notes);
@@ -152,63 +183,60 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
     const submitClicked: FormEventHandler<HTMLFormElement> = async e => {
         e.preventDefault();
 
+        if (type === 'QUESTION' && (!native || !target)) return;
+        if (type === 'INFO' && !infoTitle) return;
+
+        setIsSubmitting(true);
+
         let payload = {};
 
         const audioURL = await convertBlobToURL(audioBlob);
 
-        const maxIndex = Math.max(...lesson.questions.map(q => q.index));
+        const maxIndex = lesson.questions.length > 0 ? Math.max(...lesson.questions.map(q => q.index)) + 1 : 0;
 
-        if (type === 'TARGET_TO_NATIVE' || type === 'NATIVE_TO_TARGET') {
+        if (type === 'QUESTION') {
             const newQuestion: QuestionWithFeedback = {
                 id: questionId || -1,
                 type: type,
-                question: question,
-                answers: answers.split('\n'),
+                target: target,
+                native: native,
                 info: null,
                 infoTitle: null,
+                moduleId: lesson.moduleId,
                 lessonId: lesson.id,
-                recording: null,
-                notes: notes,
-                difficulty: null,
-                pass: null,
-                index: index < 0 ? maxIndex : index,
-                feedbackRules: feedbackRules
-            }
-
-            payload = newQuestion;
-        } else if (type === 'LISTENING') {
-            const newQuestion: QuestionWithFeedback = {
-                id: questionId || -1,
-                type: 'LISTENING',
-                question: null,
-                answers: answers.split('\n'),
-                info: null,
-                infoTitle: null,
-                lessonId: lesson.id,
+                wordHints: wordHints,
                 recording: audioURL,
                 notes: notes,
                 difficulty: null,
-                pass: null,
+                firstPass: firstPass,
                 index: index < 0 ? maxIndex : index,
-                feedbackRules: feedbackRules
+                feedbackRules: feedbackRules,
+                forwardEnabled: forwardEnabled,
+                backwardEnabled: backwardEnabled,
+                recordingEnabled: recordingEnabled
             }
 
-            payload = newQuestion
+            payload = newQuestion;
         } else if (type === 'INFO') {
             const newQuestion: QuestionWithFeedback = {
                 id: questionId || -1,
                 type: 'INFO',
-                question: null,
-                answers: [],
+                target: null,
+                native: null,
                 info: info,
                 infoTitle: infoTitle,
                 lessonId: lesson.id,
+                moduleId: lesson.moduleId,
                 recording: null,
+                wordHints: [],
                 notes: notes,
                 difficulty: null,
-                pass: null,
+                firstPass: true,
                 index: index < 0 ? maxIndex : index,
-                feedbackRules: []
+                feedbackRules: [],
+                forwardEnabled: false,
+                backwardEnabled: false,
+                recordingEnabled: false
             }
             payload = newQuestion;
         }
@@ -223,7 +251,7 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
 
         const data = await res.json();
 
-        location.reload();
+        fetchData();
 
         // toggleModal();
     };
@@ -233,38 +261,24 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
             fetch(question.recording).then(res => res.blob()).then(blob => {
                 setAudioBlob(blob);
             });
+        } else {
+            setAudioBlob(null);
         }
         setType(question.type);
         setQuestionId(question.id);
-        setQuestion(question.question || '');
-        setAnswers(question.answers?.join('\n'));
+        setTarget(question.target || '');
+        setForwardEnabled(question.forwardEnabled);
+        setBackwardEnabled(question.backwardEnabled);
+        setRecordingEnabled(question.recordingEnabled);
+        setNative(question.native || '');
         setFeedbackRules(question.feedbackRules);
+        setWordHints(question.wordHints);
         setNotes(question.notes || '');
         setIndex(question.index);
+        setFirstPass(question.firstPass);
         setInfo(question.info || '');
         setInfoTitle(question.infoTitle || '');
-        toggleModal();
-    };
-
-    const deleteRow = async (question: QuestionWithFeedback) => {
-        if (unsavedChanges) {
-            await updateOrder();
-        }
-
-        const payload = {
-            id: question.id
-        }
-
-        const res = await fetch('/api/question', {
-            method: 'DELETE',
-            body: JSON.stringify(payload),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        await res.json();
-        location.reload();
+        setSelectedQuestion(question.id);
     };
 
     const handleFeedbackTriggerChange = (value: string, index: number) => {
@@ -279,11 +293,19 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
         setFeedbackRules(newRules);
     };
 
-    const addFeedbackRule = e => {
+    const addFeedbackRule: MouseEventHandler = e => {
         e.preventDefault();
         const newRules: FeedbackRule[] = [...feedbackRules, {trigger: '', feedback: '', id: -1} as FeedbackRule]
         setFeedbackRules(newRules);
     };
+
+    const handleWordHintChange = (index: number) => {
+        return (wordId: number) => {
+            const newHints = [...wordHints];
+            newHints[index].wordEntityId = wordId;
+            setWordHints(newHints);
+        }
+    }
 
     const notesForm = (
         <>
@@ -304,16 +326,6 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
             )) : <div style={{fontStyle: 'italic', fontSize: '0.8rem'}}>No feedback rules yet</div>}
         </div>
         <button onClick={addFeedbackRule}>Add Feedback Rule</button>
-        </>
-    );
-
-    const newQuestionForm = (
-        <>
-            <div className={styles.formSectionHeader}>QUESTION INFO</div>
-            <input type="text" placeholder={`Prompt (in ${type === 'TARGET_TO_NATIVE' ? lesson.module.course.language : 'English'})`} value={question} onChange={e => setQuestion(e.target.value)} />
-            <textarea placeholder="Answers (place each answer on a new line)" value={answers} onChange={e => setAnswers(e.target.value)} />
-            {feedbackRulesForm}
-            {notesForm}
         </>
     );
 
@@ -378,10 +390,11 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
         });
 
         const data = await res.json();
-        location.reload();
+        fetchData();
+        setUnsavedChanges(false);
     }
 
-    const updateTitle = async (e) => {
+    const updateTitle: FormEventHandler = async (e) => {
         e.preventDefault();
         if (!newTitle) return;
         
@@ -399,17 +412,17 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
         });
 
         const data = await res.json();
-        location.reload();
+        fetchData();
     }
 
-    const startRecording = async e => {
+    const startRecording: MouseEventHandler = async e => {
         e.preventDefault();
 
         await audioRecorder.start();
         setAudioRecording(true);
     }
 
-    const stopRecording = async e => {
+    const stopRecording: MouseEventHandler = async e => {
 
         e.preventDefault();
 
@@ -419,7 +432,7 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
         setAudioBlob(audioAsBlob);
     }
 
-    const playAudio = e => {
+    const playAudio: MouseEventHandler = e => {
 
         e.preventDefault();
         if (!audioBlob) return;
@@ -427,19 +440,6 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
         audio.play();
-    }
-
-    const playTableRecording = (q: Question) => {
-
-        const recordingURL = q.recording;
-
-        if (!recordingURL) return;
-        fetch(recordingURL).then(async res => {
-            const blob = await res.blob();
-            const audioUrl = URL.createObjectURL(blob);
-            const audio = new Audio(audioUrl);
-            audio.play();
-        });
     };
 
     const deleteLesson: MouseEventHandler<HTMLButtonElement> = async e => {
@@ -464,7 +464,12 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
                 : <button onClick={startRecording} className={styles.recordButton}><BsRecordCircleFill /></button>}
                 {!audioRecording && audioBlob != null ? <button onClick={playAudio} className={styles.stopButton}><BsFillPlayCircleFill /></button> : (null)}
             </div>
-            <textarea placeholder="Answers (place each answer on a new line)" value={answers} onChange={e => setAnswers(e.target.value)} />
+            <div className={styles.formSectionHeader}>POSSIBLE ANSWERS</div>
+            <textarea placeholder="Answers (place each answer on a new line)" value={native} onChange={e => setNative(e.target.value)} />
+            <label>
+                Second pass only?
+                <input style={{marginLeft: '0.4rem'}} type="checkbox" checked={!firstPass} onChange={e => setFirstPass(!e.target.checked)} />
+            </label>
             {feedbackRulesForm}
             {notesForm}
         </>
@@ -479,7 +484,84 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
         </>
     );
 
-    let formContent = type === 'LISTENING' ? audioForm : type === 'INFO' ? infoForm : newQuestionForm;
+    const newQuestionForm = (
+        <>
+            <div className={styles.formSectionHeader}>QUESTION INFO</div>
+            <div style={{fontSize: '0.8rem'}}>Place each variation on a new line, primary variation on the first line</div>
+            <textarea wrap="off" placeholder={`${lesson.module.course.language} variations`} value={target} onChange={e => setTarget(e.target.value)} />
+            <textarea wrap="off" placeholder="Native variations" value={native} onChange={e => setNative(e.target.value)} />
+            <div className={styles.formSectionHeader}>RECORD AUDIO</div>
+            <div className={styles.audioButtonsContainer}>
+                {audioRecording ? <button onClick={stopRecording} className={styles.stopButton}><FaStop /></button> 
+                : <button onClick={startRecording} className={styles.recordButton}><BsRecordCircleFill /></button>}
+                {!audioRecording && audioBlob != null ? <button onClick={playAudio} className={styles.stopButton}><BsFillPlayCircleFill /></button> : (null)}
+            </div>
+            <div className={styles.formSectionHeader}>OPTIONS</div>
+            <div style={{display: 'flex', flexWrap: 'wrap', gap: '0.8rem', rowGap: '0.2rem', justifyContent:'center'}}>
+                <label>
+                    Forward translation
+                    <input style={{marginLeft: '0.4rem'}} type="checkbox" checked={forwardEnabled} onChange={e => setForwardEnabled(e.target.checked)} />
+                </label>
+                <label>
+                    Backward translation
+                    <input style={{marginLeft: '0.4rem'}} type="checkbox" checked={backwardEnabled} onChange={e => setBackwardEnabled(e.target.checked)} />
+                </label>
+                <label>
+                    Audio translation
+                    <input style={{marginLeft: '0.4rem'}} type="checkbox" checked={recordingEnabled} onChange={e => setRecordingEnabled(e.target.checked)} />
+                </label>
+                <label>
+                    Second pass only?
+                    <input style={{marginLeft: '0.4rem'}} type="checkbox" checked={!firstPass} onChange={e => setFirstPass(!e.target.checked)} />
+                </label>
+            </div>
+            <div className={styles.formSectionHeader}>WORD HINTS</div>
+            {wordHints.map((hint, index) => {
+                return <WordHintEditor hint={hint} setId={handleWordHintChange(index)} courseId={lesson.module.courseId} />
+            })}
+            {feedbackRulesForm}
+            {notesForm}
+        </>
+    );
+
+    const addToLesson = async (q: Question) => {
+        const payload = {
+            lessonId: lesson.id
+        };
+
+        const res = await fetch(`/api/question/${q.id}/lesson`, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+
+        fetchData();
+
+    };
+
+    const removeFromLesson = async (q: Question) => {
+        const payload = {
+            lessonId: null
+        };
+
+        const res = await fetch(`/api/question/${q.id}/lesson`, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await res.json();
+
+        fetchData();
+    }
+
+    let formContent = type === 'INFO' ? infoForm : newQuestionForm;
 
     return (
         <main className={styles.container}>
@@ -491,84 +573,115 @@ export default function CourseDashboard({ lesson }: { lesson: LessonWithEverythi
                 <input type='submit' value="CHANGE TITLE" />
                 <button className={styles.deleteButton} onClick={deleteLesson}><FaSkullCrossbones /> DELETE LESSON</button>
             </form>
-            <div className={cn(styles.contentContainer, styles.wide)}>
-                <h5>LESSON CONTENT</h5>
-                {lesson.questions.length > 0 ? (
-                    <table className={styles.lessonTable}>
-                        <colgroup>
-                            <col />
-                            <col />
-                            <col />
-                            <col style={{width: '10%'}}/>
-                            <col style={{width: '5%'}}/>
-                            <col style={{width: '8%'}} />
-                            <col style={{width: '5%'}} />
-                            <col style={{width: '5%'}} />
-                            <col style={{width: '5%'}} />
-                        </colgroup>
-                        <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>Question/Title</th>
-                            <th>Answers</th>
-                            <th>Notes</th>
-                            <th><AiFillSound /></th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {order.map(index => lesson.questions[index]).map((q, index) => {
-                            return (
-                                <tr key={q.id} className={cn({[styles.up]: upIndex === index, [styles.down]: downIndex === index, [styles.info]: q.type === 'INFO'})}>
-                                    <td>{typeToIcon(q.type)}</td>
-                                    <td>{q.question || q.infoTitle}</td>
-                                    <td>{q.answers.join('; ')}</td>
-                                    <td>{!q.notes ? (null) : <button onClick={e => notesClicked(q, e)} className={styles.iconButton}><GiNotebook /></button>}</td>
-                                    <td>{q.type !== 'LISTENING' ? (null) : !q.recording ? <HiExclamationCircle style={{color: variables.themeRed, fontSize: '1.2rem'}} /> : <button onClick={() => playTableRecording(q)} className={styles.iconButton}><FaCheckCircle style={{color: variables.themeGreen}} /></button>}</td>
-                                    <td><button onClick={() => editRow(q)}>Edit</button></td>
-                                    <td><button onClick={() => decreaseIndex(index)} className={styles.iconButton}><FaArrowCircleUp /></button></td>
-                                    <td><button onClick={() => increaseIndex(index)} className={styles.iconButton}><FaArrowCircleDown /></button></td>
-                                    <td><button onClick={() => deleteRow(q)} className={styles.iconButton}><TiDelete style={{color: variables.themeRed, fontSize: '1.6rem'}} /></button></td>
-                                </tr>
-                            );
-                        })}
-                        </tbody>
-                    </table>
-                ) : (<div className={styles.noScreens}>No screens yet!</div>)}
-                <div style={{display: 'flex', width: '100%', justifyContent: 'center', gap: '20px'}}>
-                    <button onClick={toggleModal}>ADD A SCREEN</button>
-                    {unsavedChanges ? <button onClick={updateOrder} className='important' style={{backgroundColor: variables.themeGreen}}>SAVE ORDER</button> : (null)}
+            <div className={styles.lessonContentContainer}>
+                <div className={styles.lessonViewContainer}>
+                    <h5>LESSON CONTENT</h5>
+                    {lesson.questions.length > 0 ? (
+                        <table className={styles.lessonTable}>
+                            <colgroup>
+                                <col />
+                                <col style={{width: '5%'}}/>
+                                <col />
+                                <col />
+                                <col style={{width: '10%'}}/>
+                                <col style={{width: '5%'}} />
+                                <col style={{width: '5%'}} />
+                                <col style={{width: '5%'}} />
+                            </colgroup>
+                            <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th><AiFillSound /></th>
+                                <th>{lesson.module.course.language}/Title</th>
+                                <th>Native</th>
+                                <th>Notes</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {order.length === lesson.questions.length && order.map(index => lesson.questions[index]).map((q, index) => {
+                                return (
+                                    <tr onClick={() => editRow(q)} key={q.id} className={cn({[styles.up]: upIndex === index, [styles.down]: downIndex === index, [styles.info]: selectedQuestion === q.id})}>
+                                        <td>{typeToIcon(q.type)}</td>
+                                        <td>{q.type !== 'QUESTION' ? (null) : !q.recording ? <HiExclamationCircle style={{color: variables.themeRed, fontSize: '1.2rem'}} /> : <button onClick={e => {e.stopPropagation(); playTableRecording(q)}} className={styles.iconButton}><FaCheckCircle style={{color: variables.themeGreen}} /></button>}</td>
+                                        <td style={{fontWeight: q.type === 'INFO' ? 'bold' : 'normal'}}>{q.target?.split('\n')[0] || q.infoTitle}</td>
+                                        <td>{q.native?.split('\n')[0]}</td>
+                                        <td>{!q.notes ? (null) : <button onClick={e => notesClicked(q, e)} className={styles.iconButton}><GiNotebook /></button>}</td>
+                                        <td><button onClick={e => {e.stopPropagation(); decreaseIndex(index)}} className={styles.iconButton}><FaArrowCircleUp /></button></td>
+                                        <td><button onClick={e => {e.stopPropagation(); increaseIndex(index)}} className={styles.iconButton}><FaArrowCircleDown /></button></td>
+                                        <td><button onClick={e => {e.stopPropagation(); removeFromLesson(q)}} className={styles.iconButton}><TiDelete style={{color: variables.themeRed, fontSize: '1.6rem'}} /></button></td>
+                                    </tr>
+                                );
+                            })}
+                            </tbody>
+                        </table>
+                    ) : (<div className={styles.noScreens}>No screens yet! Select them from the list below, or create new ones with the screen editor!</div>)}
+                    {unsavedChanges ? <div style={{display: 'flex', justifyContent:'flex-end', marginBottom: '2rem'}}><button onClick={updateOrder} className='important' style={{backgroundColor: variables.themeGreen}}>SAVE ORDER</button></div>  : (null)}
+                    <h5>MORE SCREENS FROM THIS MODULE</h5>
+                    {lesson.module.questions.length > 0 ? (
+                        <table className={styles.lessonTable}>
+                            <colgroup>
+                                <col />
+                                <col style={{width: '5%'}}/>
+                                <col />
+                                <col />
+                                <col style={{width: '10%'}}/>
+                                <col style={{width: '5%'}} />
+                            </colgroup>
+                            <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th><AiFillSound /></th>
+                                <th>{lesson.module.course.language}/Title</th>
+                                <th>Native</th>
+                                <th>Notes</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {lesson.module.questions.map((q) => {
+                                return (
+                                    <tr key={q.id}>
+                                        <td>{typeToIcon(q.type)}</td>
+                                        <td>{q.type !== 'QUESTION' ? (null) : !q.recording ? <HiExclamationCircle style={{color: variables.themeRed, fontSize: '1.2rem'}} /> : <button onClick={e => {e.stopPropagation(); playTableRecording(q)}} className={styles.iconButton}><FaCheckCircle style={{color: variables.themeGreen}} /></button>}</td>
+                                        <td style={{fontWeight: q.type === 'INFO' ? 'bold' : 'normal'}}>{q.target?.split('\n')[0] || q.infoTitle}</td>
+                                        <td>{q.native?.split('\n')[0]}</td>
+                                        <td>{!q.notes ? (null) : <button onClick={e => notesClicked(q, e)} className={styles.iconButton}><GiNotebook /></button>}</td>
+                                        <td><button onClick={() => addToLesson(q)}>ADD TO LESSON</button></td>
+                                    </tr>
+                                );
+                            })}
+                            </tbody>
+                        </table>
+                    ) : (<div className={styles.noScreens}>No more screens! Use the screen editor to create more!</div>)}
                 </div>
-            </div>
-            <div className={cn(styles.modal, {[styles.visible]: modalVisible})}>
-                <div>
-                    <form onSubmit={submitClicked}>
-                        <h4>{!questionId ? 'NEW SCREEN' : 'EDITING SCREEN'}</h4>
-                        <div className={styles.radioContainer}>
-                            <div className={styles.radio}>
-                                <input type='radio' id="native-button" name="native" value="NATIVE_TO_TARGET" checked={type === 'NATIVE_TO_TARGET'} onChange={e => setType(e.currentTarget.value as QuestionType)} />
-                                <label htmlFor='native-button'>Forward Translation</label>
+                <div className={styles.editor}>
+                    <div>
+                        <form onSubmit={submitClicked}>
+                            <div className={styles.formTopRow}>
+                                <h5>SCREEN EDITOR</h5>
+                                <div>
+                                    {questionId ? <button onClick={newQuestion}>CREATE NEW</button> : (null)}
+                                    {!isSubmitting ? <input type="submit" value={!questionId ? "CREATE" : "UPDATE"} /> : 
+                                    <ClipLoader color={variables.themeRed} loading={true} />}
+                                </div>
                             </div>
-                            <div className={styles.radio}>
-                                <input type='radio' id="target-button" name="target" value="TARGET_TO_NATIVE" checked={type === 'TARGET_TO_NATIVE'} onChange={e => setType(e.currentTarget.value as QuestionType)} />
-                                <label htmlFor='target-button'>Backward Translation</label>
+                            <div className={styles.formSectionHeader}>SCREEN TYPE</div>
+                            <div className={styles.radioContainer}>
+                                <div className={styles.radio}>
+                                    <input type='radio' id="question-button" name="question" value="QUESTION" checked={type === 'QUESTION'} onChange={e => setType(e.currentTarget.value as QuestionType)} />
+                                    <label htmlFor='question-button'>Question</label>
+                                </div>
+                                <div className={styles.radio}>
+                                    <input type='radio' id="info-button" name="info" value="INFO" checked={type === 'INFO'} onChange={e => setType(e.currentTarget.value as QuestionType)} />
+                                    <label htmlFor='info-button'>Info</label>
+                                </div>
                             </div>
-                            <div className={styles.radio}>
-                                <input type='radio' id="listening-button" name="listening" value="LISTENING" checked={type === 'LISTENING'} onChange={e => setType(e.currentTarget.value as QuestionType)} />
-                                <label htmlFor='listening-button'>Listening</label>
-                            </div>
-                            <div className={styles.radio}>
-                                <input type='radio' id="info-button" name="info" value="INFO" checked={type === 'INFO'} onChange={e => setType(e.currentTarget.value as QuestionType)} />
-                                <label htmlFor='info-button'>Info</label>
-                            </div>
-                        </div>
-                        { formContent }
-                        <input type="submit" value={!questionId ? "CREATE!" : "SUBMIT EDITS"} />
-                    </form>
-                    <button className={styles.cancel} onClick={toggleModal}><TiDelete /></button>
+                            { formContent }
+                        </form>
+                    </div>
                 </div>
             </div>
             <div ref={notesRef} className={styles.notesDisplay}>

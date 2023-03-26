@@ -11,28 +11,31 @@ datasource db {
 }
 
 model Course {
-    id        Int      @id @default(autoincrement())
+    id        Int          @id @default(autoincrement())
     modules   Module[]
     language  String
-    owner     User     @relation(fields: [ownerId], references: [id], name: "courseOwner")
-    editors   User[]   @relation(name: "editors")
-    ownerId   Int
+    owner     User         @relation(fields: [ownerId], references: [id], name: "courseOwner", onDelete: Cascade)
+    editors   User[]       @relation(name: "editors")
+    ownerId   Int          @map("owner_id")
     image     String?
-    published Boolean  @default(false)
+    published Boolean      @default(false)
+    users     UserCourse[]
 
     @@map("courses")
 }
 
 model Module {
-    id           Int      @id @default(autoincrement())
-    course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-    courseId     Int
-    isCheckpoint Boolean  @default(false)
+    id           Int        @id @default(autoincrement())
+    course       Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    courseId     Int        @map("course_id")
+    isCheckpoint Boolean    @default(false) @map("is_checkpoint")
     lessons      Lesson[]
     title        String
     index        Int
     image        String?
-    published    Boolean  @default(false)
+    published    Boolean    @default(false)
+    questions    Question[]
+    words        Word[]
 
     @@map("modules")
 }
@@ -41,7 +44,7 @@ model Lesson {
     id        Int        @id @default(autoincrement())
     questions Question[]
     module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-    moduleId  Int
+    moduleId  Int        @map("module_id")
     title     String
     index     Int
 
@@ -49,22 +52,39 @@ model Lesson {
 }
 
 model Question {
-    id            Int            @id @default(autoincrement())
-    type          QuestionType
-    question      String?
-    infoTitle     String?
-    info          String?
-    answers       String[]
-    lessonId      Int
-    lesson        Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-    feedbackRules FeedbackRule[]
-    recording     String?
-    notes         String?
-    difficulty    Int?
-    pass          Int?
-    index         Int
+    id               Int            @id @default(autoincrement())
+    type             QuestionType
+    native           String?
+    infoTitle        String?        @map("info_title")
+    info             String?
+    target           String?
+    lessonId         Int?           @map("lesson_id")
+    lesson           Lesson?        @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+    feedbackRules    FeedbackRule[]
+    recording        String?
+    moduleId         Int            @map("module_id")
+    module           Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+    notes            String?
+    difficulty       Int?
+    firstPass        Boolean        @default(true)
+    index            Int
+    wordHints        WordHint[]
+    forwardEnabled   Boolean        @default(true)
+    backwardEnabled  Boolean        @default(true)
+    recordingEnabled Boolean        @default(true)
 
     @@map("questions")
+}
+
+model WordHint {
+    id           Int      @id @default(autoincrement())
+    question     Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+    questionId   Int      @map("question_id")
+    wordString   String   @map("word_string")
+    wordEntity   Word?    @relation(fields: [wordEntityId], references: [id], onDelete: SetNull)
+    wordEntityId Int?
+
+    @@map("word_hints")
 }
 
 model FeedbackRule {
@@ -72,28 +92,49 @@ model FeedbackRule {
     trigger    String
     feedback   String
     question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-    questionId Int
+    questionId Int      @map("question_id")
 
     @@map("feedback_rules")
 }
 
 enum QuestionType {
-    TARGET_TO_NATIVE
-    NATIVE_TO_TARGET
-    LISTENING
+    QUESTION
     INFO
 
     @@map("questions_types")
 }
 
+model Word {
+    id        Int        @id @default(autoincrement())
+    native    String
+    target    String
+    recording String?
+    module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+    moduleId  Int
+    WordHint  WordHint[]
+
+    @@map("words")
+}
+
 model User {
-    id              Int      @id @default(autoincrement())
-    email           String   @unique
+    id              Int          @id @default(autoincrement())
+    email           String       @unique
     password        String
-    username        String   @unique
-    canEdit         Boolean  @default(false)
-    editableCourses Course[] @relation(name: "editors")
-    ownedCourses    Course[] @relation(name: "courseOwner")
+    username        String       @unique
+    canEdit         Boolean      @default(false) @map("can_edit")
+    editableCourses Course[]     @relation(name: "editors")
+    ownedCourses    Course[]     @relation(name: "courseOwner")
+    friends         User[]       @relation(name: "friends")
+    fakeFriends     User[]       @relation(name: "friends")
+    courses         UserCourse[]
 
     @@map("users")
+}
+
+model UserCourse {
+    id       Int    @id @default(autoincrement())
+    user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId   Int    @map("user_id")
+    course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    courseId Int    @map("course_id")
 }

@@ -1,9 +1,14 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import CourseDashboard from "./CourseDashboard";
-import { useUser } from "@/lib/user";
+import { useUser, userCanEditCourse } from "@/lib/user";
+
+export async function generateMetadata({ params }: {params: {id: string}}) {
+    const course = await prisma.course.findFirst({where: {id: parseInt(params.id)}});
+    return {title: `${course?.language} | Genghis Khan Academy`};
+}
+  
 
 export default async function Course({ params }: { params: { id: string }}) {
-    const prisma = new PrismaClient();
     const id = parseInt(params.id);
 
     const user = await useUser();
@@ -24,12 +29,18 @@ export default async function Course({ params }: { params: { id: string }}) {
                 orderBy: {
                     index: 'asc'
                 }
-            }
+            },
+            editors: true,
+            owner: true
         }
     });
 
     if (!course) {
         throw new Error("Course not found!");
+    }
+
+    if (!userCanEditCourse(user.id, course.id, prisma)) {
+        throw new Error("You're not allowed to see that!");
     }
 
     const promises = course.modules.map(module => {
@@ -38,7 +49,7 @@ export default async function Course({ params }: { params: { id: string }}) {
                 lesson: {
                     moduleId: module.id,
                 },
-                type: 'LISTENING',
+                type: 'QUESTION',
                 recording: null
             }
         }).then(res => ({id: module.id, badQuestions: res}));
@@ -48,7 +59,5 @@ export default async function Course({ params }: { params: { id: string }}) {
         return {...prev, [curr.id]: curr.badQuestions};
     }, {});
 
-    prisma.$disconnect();
-
-    return <CourseDashboard course={course} badQuestionsPerModule={badQuestions} />
+    return <CourseDashboard course={course} badQuestionsPerModule={badQuestions} user={user} />
 }

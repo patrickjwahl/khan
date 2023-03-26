@@ -1,5 +1,5 @@
-import './globals.scss'
-import { Noto_Sans } from 'next/font/google';
+// import './globals.scss'
+import { Noto_Sans, Nunito, Quicksand } from 'next/font/google';
 
 export const metadata = {
   title: 'Create Next App',
@@ -13,13 +13,19 @@ const noto = Noto_Sans({
     variable: '--font-noto'
 });
 
+const nunito = Nunito({
+    subsets: ['latin', 'cyrillic'],
+    style: ['normal', 'italic'],
+    variable: '--font-noto'
+});
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={noto.variable}>
+    <html lang="en" className={nunito.variable}>
       <body>{children}</body>
     </html>
   )

@@ -1,10 +1,8 @@
+import { prisma } from "@/lib/db";
 import { useUser } from "@/lib/user";
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-
-    const prisma = new PrismaClient();
     const requestData = await request.json();
 
     const user = await useUser();
@@ -28,8 +26,6 @@ export async function POST(request: NextRequest) {
             }
         }
     });
-
-    prisma.$disconnect();
 
     return NextResponse.json({code: 'OK', redirectId: course.id});
 

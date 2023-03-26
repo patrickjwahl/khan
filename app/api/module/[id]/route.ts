@@ -1,10 +1,71 @@
+import { prisma } from "@/lib/db";
 import { useUser, userCanEditCourse } from "@/lib/user";
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(request: NextRequest, context: { params: {id: string}}) {
+    const id = parseInt(context.params.id);
+
+    const user = await useUser();
+
+    if (!user || !user.canEdit) {
+        throw new Error("You're not allowed to see that!");
+    }
+
+    const module = await prisma.module.findFirst({
+        where: {
+            id: id
+        },
+        include: {
+            lessons: { 
+                include: {
+                    questions: true
+                },
+                orderBy: {
+                    index: 'asc'
+                }
+            },
+            course: true
+        }
+    });
+
+    if (!module) {
+        return NextResponse.json({code: 'MODULE_NOT_FOUND'});
+    }
+
+    if (!userCanEditCourse(user.id, module?.courseId, prisma)) {
+        return NextResponse.json({code: 'NOT_AUTHORIZED'});
+    }
+
+    const moduleQuestions = await prisma.question.findMany({
+        where: {
+            moduleId: id
+        }, 
+        include: {
+            feedbackRules: true,
+            wordHints: {
+                include: {
+                    wordEntity: true
+                }
+            },
+            lesson: true
+        },
+        orderBy: [
+            {
+                lesson: {
+                    index: 'asc'
+                }
+            },
+            {
+                index: 'asc'
+            }
+        ]
+    });
+
+    return NextResponse.json({code: 'OK', moduleQuestions, module});
+}
 
 export async function POST(request: NextRequest, context: { params: {id: string}}) {
 
-    const prisma = new PrismaClient();
     const requestData = await request.json();
 
     const courseId = (await prisma.module.findFirst({ where: {id: parseInt(context.params.id)}}))?.courseId;
@@ -21,13 +82,10 @@ export async function POST(request: NextRequest, context: { params: {id: string}
         data: requestData
     });
 
-    prisma.$disconnect();
-
     return NextResponse.json({code: 'OK'});
 }
 
 export async function DELETE(request: NextRequest, context: { params: { id: string }}) {
-    const prisma = new PrismaClient();
 
     const courseId = (await prisma.module.findFirst({ where: {id: parseInt(context.params.id)}}))?.courseId;
 
@@ -37,8 +95,6 @@ export async function DELETE(request: NextRequest, context: { params: { id: stri
     }
 
     await prisma.module.delete({where: {id: parseInt(context.params.id)}});
-
-    prisma.$disconnect();
 
     return NextResponse.json({code: 'OK'});
 

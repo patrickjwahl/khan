@@ -1,19 +1,32 @@
+import { prisma } from "@/lib/db";
 import { sessionOptions } from "@/lib/session";
 import { PrismaClient } from "@prisma/client";
 import argon2 from "argon2";
 import { withIronSessionApiRoute } from "iron-session/next";
 import { NextApiRequest, NextApiResponse } from "next";
 
+declare module "iron-session" { 
+    interface IronSessionData { 
+      user?: {
+          email: string,
+          username: string,
+          id: number,
+          canEdit: boolean,
+          isLoggedIn: boolean
+      }
+    } 
+  }
+
 async function handler(req: NextApiRequest, res: NextApiResponse) {
 
-    const prisma = new PrismaClient();
+    const { username, password } = req.body;
+    const emailUser = await prisma.user.findFirst({where: {email: username}});
+    const passwordUser = await prisma.user.findFirst({where: {username: username}});
 
-    const { email, password } = req.body;
-    const user = await prisma.user.findUnique({where: {email}});
+    const user = emailUser || passwordUser;
 
     if (!user) {
-        res.status(401).json({'code': 'NO_USER_EXISTS'});
-        return;
+        return res.json({'code': 'NO_USER_EXISTS'});
     }
 
     let verified = false;
@@ -25,7 +38,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     if (!verified) {
-        res.status(401).json({'code': 'INCORRECT_PASSWORD'});
+        return res.status(401).json({'code': 'INCORRECT_PASSWORD'});
     }
 
     req.session.user = {email: user.email, username: user.username, id: user.id, canEdit: user.canEdit, isLoggedIn: true};
