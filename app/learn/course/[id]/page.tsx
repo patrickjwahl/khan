@@ -107,32 +107,3 @@ export default async function Course({ params }: { params: { id: string }}) {
         </div>
     );
 }
-
-async function getSidebarContent() {
-    const user = await useUser();
-    
-    if (!user) return <div>Log in to see your stats!</div>;
-
-    const daysOfWeek = [6, 5, 4, 3, 2, 1, 0];
-
-    const datesToGet = daysOfWeek.map(offset => {
-        const d = new Date();
-        d.setDate(d.getDate() - offset);
-        return d.toDateString();
-    });
-
-    const promises = datesToGet.map(date => {
-        return prisma.exp.aggregate({
-            _sum: {
-                amount: true
-            },
-            where: {
-                date: date
-            }
-        });
-    });
-
-    const expData = (await Promise.all(promises)).map(entry => entry._sum.amount || 0);
-
-    return <SidebarContent expData={expData} />
-}
