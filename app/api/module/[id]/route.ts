@@ -32,7 +32,7 @@ export async function GET(request: NextRequest, context: { params: {id: string}}
         return NextResponse.json({code: 'MODULE_NOT_FOUND'});
     }
 
-    if (!userCanEditCourse(user.id, module?.courseId, prisma)) {
+    if (! await userCanEditCourse(user.id, module?.courseId, prisma)) {
         return NextResponse.json({code: 'NOT_AUTHORIZED'});
     }
 
@@ -43,6 +43,9 @@ export async function GET(request: NextRequest, context: { params: {id: string}}
         include: {
             feedbackRules: true,
             wordHints: {
+                orderBy: {
+                    index: 'asc'
+                },
                 include: {
                     wordEntity: true
                 }

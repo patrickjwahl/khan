@@ -14,7 +14,7 @@ import Link from "next/link";
 import { FaArrowCircleDown, FaArrowCircleUp, FaSkullCrossbones } from "react-icons/fa";
 import { useS3Upload } from 'next-s3-upload';
 import Image from "next/image";
-import { BsBroadcastPin } from "react-icons/bs";
+import { BsBroadcastPin, BsEyeFill } from "react-icons/bs";
 import { User } from "@/lib/user";
 import { User as PrismaUser } from '@prisma/client';
 
@@ -303,6 +303,10 @@ export default function CourseDashboard({ course, badQuestionsPerModule, user }:
         location.reload();
     }
 
+    const viewCourse = () => {
+        window.open(`/learn/course/${course.id}`);
+    };
+
     return (
         <main className={styles.container}>
             <Breadcrumbs trail={breadcrumbs} />
@@ -321,6 +325,7 @@ export default function CourseDashboard({ course, badQuestionsPerModule, user }:
                 <button onClick={e => {e.preventDefault(); openFileDialog();}}>CHANGE IMAGE</button>
                 <button className={styles.deleteButton} onClick={deleteCourse}><FaSkullCrossbones /> DELETE COURSE</button>
                 {!course.published ? <button className="important" onClick={e => publishCourse(e, true)}><BsBroadcastPin /> PUBLISH COURSE</button> : <button onClick={e => publishCourse(e, false)}>UNPUBLISH COURSE</button>}
+                <button style={{backgroundColor: variables.themeBlue}} onClick={viewCourse}><BsEyeFill /> {course.published ? 'VIEW COURSE' : 'PREVIEW COURSE'}</button>
             </form>
             <div className={styles.contentContainer}>
                 <h5>MODULES</h5>
@@ -395,6 +400,7 @@ export default function CourseDashboard({ course, badQuestionsPerModule, user }:
                         );
                     })}
                 </div>
+                {course.ownerId === user.id && (<>
                 <form className={styles.addUserForm} onSubmit={addEditor}>
                     <label>
                         Add an editor:
@@ -403,6 +409,7 @@ export default function CourseDashboard({ course, badQuestionsPerModule, user }:
                     <input type="submit" value="Grant Access" />
                 </form>
                 {newUserError ? <div>That user doesn't exist!</div> : (null) }
+                </>)}
             </div>
             <div className={cn(styles.modal, {[styles.visible]: modalVisible})}>
                 <div>

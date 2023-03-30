@@ -39,7 +39,7 @@ export default async function Course({ params }: { params: { id: string }}) {
         throw new Error("Course not found!");
     }
 
-    if (!userCanEditCourse(user.id, course.id, prisma)) {
+    if (! await userCanEditCourse(user.id, course.id, prisma)) {
         throw new Error("You're not allowed to see that!");
     }
 

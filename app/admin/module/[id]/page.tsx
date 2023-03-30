@@ -38,7 +38,7 @@ export default async function Module({ params }: { params: { id: string }}) {
         throw new Error("Module not found!");
     }
 
-    if (!userCanEditCourse(user.id, module?.courseId, prisma)) {
+    if (! await userCanEditCourse(user.id, module?.courseId, prisma)) {
         throw new Error("You're not allowed to see that!");
     }
 
@@ -49,6 +49,9 @@ export default async function Module({ params }: { params: { id: string }}) {
         include: {
             feedbackRules: true,
             wordHints: {
+                orderBy: {
+                    index: 'asc'
+                },
                 include: {
                     wordEntity: true
                 }

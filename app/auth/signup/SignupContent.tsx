@@ -89,7 +89,7 @@ export default function SignupContent() {
                     {passwordError && <div className={styles.errorMessage}><div>{passwordError}</div></div>}
                 </div>
                 <div>
-                    <input className={cn('purple', {'working': isSubmitting})} type="submit" value="CREATE ACCOUNT" />
+                    <input className={cn('purple', {'working': isSubmitting})} type="submit" value={isSubmitting ? '...' : 'CREATE ACCOUNT'} />
                 </div>
             </form>
             <div className={styles.bottomContainer}>

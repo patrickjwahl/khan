@@ -1,0 +1,29 @@
+@use '../../v.module.scss';
+
+.friendsContainer {
+    input[type=text] {
+        padding: 0.8rem;
+        border-radius: 10px;
+        outline: none;
+        box-sizing: border-box;
+        border: none;
+        background-color: v.$ultralightblue;
+        box-shadow: 0 2px 0 v.$darkpink inset;
+
+        &::placeholder {
+            color: v.$lightforeground;
+        }
+    }
+}
+
+.addFriendContainer {
+
+    h5 {
+        font-weight: bolder;
+    }
+    form {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+    }
+}

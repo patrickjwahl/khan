@@ -22,6 +22,9 @@ export async function GET(request: NextRequest, context: { params: {id: string}}
                 },
                 include: {
                     wordHints: {
+                        orderBy: {
+                            index: 'asc'
+                        },
                         include: {
                             wordEntity: true
                         }
@@ -46,7 +49,7 @@ export async function GET(request: NextRequest, context: { params: {id: string}}
         return NextResponse.json({code: 'NO_SUCH_LESSON'});
     }
 
-    if (!userCanEditCourse(user.id, lesson.module.courseId, prisma)) {
+    if (! await userCanEditCourse(user.id, lesson.module.courseId, prisma)) {
         return NextResponse.json({code: 'NOT_AUTHORIZED'});
     }
 

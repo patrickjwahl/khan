@@ -24,6 +24,7 @@ import audioRecorder from "@/lib/audio";
 import InfoEditor from "./InfoEditor";
 import Breadcrumbs, { Breadcrumb } from "../../Breadcrumbs";
 import WordHintEditor from "./WordHintEditor";
+import Link from "next/link";
 
 type LessonWithEverything = Prisma.LessonGetPayload<{include: { module: { include: { course: true, questions: true }}, questions: {include: { feedbackRules: true, wordHints: {include: {wordEntity: true}} }} }}>;
 type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHints: {include: {wordEntity: true}}}}>;
@@ -51,7 +52,7 @@ export const playTableRecording = (q: Question) => {
     });
 };
 
-export default function LessonDashboard({ initLesson }: { initLesson: LessonWithEverything }) {
+export default function LessonDashboard({ initLesson, prevId, nextId }: { initLesson: LessonWithEverything, prevId?: number, nextId?: number }) {
 
     const [ lesson, setLesson ] = useState(initLesson);
 
@@ -92,6 +93,8 @@ export default function LessonDashboard({ initLesson }: { initLesson: LessonWith
 
     const router = useRouter();
     const notesRef = useRef<HTMLDivElement>(null);
+
+    const topRef = useRef<HTMLTextAreaElement | null>(null);
 
     const breadcrumbs: Breadcrumb[] = [
         {
@@ -148,7 +151,11 @@ export default function LessonDashboard({ initLesson }: { initLesson: LessonWith
         setInfo('');
         setInfoTitle('');
         setAudioBlob(null);
+        setForwardEnabled(true);
+        setBackwardEnabled(true);
+        setRecordingEnabled(true);
         setSelectedQuestion(-1);
+        topRef.current && topRef.current.focus();
     }
 
     const convertBlobToURL = (blob: Blob | null): Promise<string | null> | null => {
@@ -252,6 +259,8 @@ export default function LessonDashboard({ initLesson }: { initLesson: LessonWith
         const data = await res.json();
 
         fetchData();
+        setIsSubmitting(false);
+        newQuestion();
 
         // toggleModal();
     };
@@ -488,7 +497,7 @@ export default function LessonDashboard({ initLesson }: { initLesson: LessonWith
         <>
             <div className={styles.formSectionHeader}>QUESTION INFO</div>
             <div style={{fontSize: '0.8rem'}}>Place each variation on a new line, primary variation on the first line</div>
-            <textarea wrap="off" placeholder={`${lesson.module.course.language} variations`} value={target} onChange={e => setTarget(e.target.value)} />
+            <textarea ref={topRef} wrap="off" placeholder={`${lesson.module.course.language} variations`} value={target} onChange={e => setTarget(e.target.value)} />
             <textarea wrap="off" placeholder="Native variations" value={native} onChange={e => setNative(e.target.value)} />
             <div className={styles.formSectionHeader}>RECORD AUDIO</div>
             <div className={styles.audioButtonsContainer}>
@@ -519,6 +528,7 @@ export default function LessonDashboard({ initLesson }: { initLesson: LessonWith
             {wordHints.map((hint, index) => {
                 return <WordHintEditor hint={hint} setId={handleWordHintChange(index)} courseId={lesson.module.courseId} />
             })}
+            {wordHints.length > 0 && <div style={{fontStyle: 'italic', fontSize: '0.8rem'}}>Press the UPDATE button above to submit your changes!</div>}
             {feedbackRulesForm}
             {notesForm}
         </>
@@ -568,6 +578,10 @@ export default function LessonDashboard({ initLesson }: { initLesson: LessonWith
             <Breadcrumbs trail={breadcrumbs} />
             <h6>LESSON</h6>
             <h2>{lesson.title.toUpperCase()}</h2>
+            <div style={{display: 'flex', gap: '200px', height: '40px'}}>
+                {prevId ? <Link style={{width: '150px'}}  href={`/admin/lesson/${prevId}`}>{'<< '} Previous Lesson</Link> : <div style={{width: '150px'}}></div>}
+                {nextId ? <Link style={{width: '150px'}} href={`/admin/lesson/${nextId}`}>Next Lesson {' >>'}</Link> : <div style={{width: '150px'}}></div>}
+            </div>
             <form onSubmit={updateTitle} style={{fontSize: '12px', display: 'flex', flexDirection: 'row', gap: '0.8rem', marginBottom: '2.4rem'}}>
                 <input type='text' placeholder="New title..." value={newTitle} onChange={e => setNewTitle(e.target.value)} />
                 <input type='submit' value="CHANGE TITLE" />
@@ -580,6 +594,7 @@ export default function LessonDashboard({ initLesson }: { initLesson: LessonWith
                         <table className={styles.lessonTable}>
                             <colgroup>
                                 <col />
+                                <col />
                                 <col style={{width: '5%'}}/>
                                 <col />
                                 <col />
@@ -591,6 +606,7 @@ export default function LessonDashboard({ initLesson }: { initLesson: LessonWith
                             <thead>
                             <tr>
                                 <th>Type</th>
+                                <th>Pass</th>
                                 <th><AiFillSound /></th>
                                 <th>{lesson.module.course.language}/Title</th>
                                 <th>Native</th>
@@ -605,6 +621,7 @@ export default function LessonDashboard({ initLesson }: { initLesson: LessonWith
                                 return (
                                     <tr onClick={() => editRow(q)} key={q.id} className={cn({[styles.up]: upIndex === index, [styles.down]: downIndex === index, [styles.info]: selectedQuestion === q.id})}>
                                         <td>{typeToIcon(q.type)}</td>
+                                        <td>{q.firstPass ? '1' : '2'}</td>
                                         <td>{q.type !== 'QUESTION' ? (null) : !q.recording ? <HiExclamationCircle style={{color: variables.themeRed, fontSize: '1.2rem'}} /> : <button onClick={e => {e.stopPropagation(); playTableRecording(q)}} className={styles.iconButton}><FaCheckCircle style={{color: variables.themeGreen}} /></button>}</td>
                                         <td style={{fontWeight: q.type === 'INFO' ? 'bold' : 'normal'}}>{q.target?.split('\n')[0] || q.infoTitle}</td>
                                         <td>{q.native?.split('\n')[0]}</td>

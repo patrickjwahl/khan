@@ -20,7 +20,7 @@ export default function Page() {
             </div>
             <div className={styles.buttonContainer}>
                 <Link href='/auth/signup'><button>CREATE AN ACCOUNT</button></Link>
-                <button className="orange">START LEARNING MONGOLIAN</button>
+                <Link href='/learn/course/12'><button className="orange">START LEARNING MONGOLIAN</button></Link>
             </div>
         </main>
     );

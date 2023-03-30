@@ -10,11 +10,13 @@
   },
   "dependencies": {
     "@prisma/client": "^4.11.0",
+    "@ramonak/react-progress-bar": "^5.0.3",
     "@tinymce/tinymce-react": "^4.3.0",
     "@types/react": "18.0.28",
     "@types/react-dom": "18.0.11",
     "argon2": "^0.30.3",
     "classnames": "^2.3.2",
+    "csv-parse": "^5.3.6",
     "eslint": "8.36.0",
     "eslint-config-next": "13.2.4",
     "iron-session": "^6.3.1",
@@ -24,11 +26,15 @@
     "react-dom": "18.2.0",
     "react-icons": "^4.8.0",
     "react-spinners": "^0.13.8",
+    "react-xarrows": "^2.0.2",
+    "recharts": "^2.5.0",
     "sass": "^1.59.3",
-    "swr": "^2.1.0"
+    "swr": "^2.1.0",
+    "use-sound": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^18.15.5",
+    "file-loader": "^6.2.0",
     "prisma": "^4.11.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.2"

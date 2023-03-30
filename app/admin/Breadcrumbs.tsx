@@ -13,7 +13,7 @@ export default function Breadcrumbs({ trail }: {trail: Breadcrumb[]}) {
             {trail.map((crumb, index) => {
                 return (<React.Fragment key={index}>
                     {index === 0 ? (null) : <div>{'>'}</div>}
-                    <Link href={crumb.link}>{crumb.name}</Link>
+                    <a href={crumb.link}>{crumb.name}</a>
                 </React.Fragment>);
             })}
         </div>

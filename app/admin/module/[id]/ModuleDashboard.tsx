@@ -11,7 +11,7 @@ import variables from '../../../_variables.module.scss';
 import Breadcrumbs, { Breadcrumb } from "../../Breadcrumbs";
 import { AiFillSound } from "react-icons/ai";
 import { FaArrowCircleDown, FaArrowCircleUp, FaSkullCrossbones } from "react-icons/fa";
-import { BsCheckCircle } from 'react-icons/bs';
+import { BsCheckCircle, BsEyeFill } from 'react-icons/bs';
 import Link from "next/link";
 import { useS3Upload } from "next-s3-upload";
 import Image from "next/image";
@@ -293,6 +293,10 @@ export default function ModuleDashboard({ initModule, nextId, prevId, initModule
         fetchData();
     };
 
+    const previewModule = () => {
+        window.open(`/learn/course/${module.courseId}#module-${module.id}`);
+    };
+
     return (
         <main className={styles.container}>
             <Breadcrumbs trail={breadcrumbs} />
@@ -315,6 +319,7 @@ export default function ModuleDashboard({ initModule, nextId, prevId, initModule
                 <button onClick={e => {e.preventDefault(); openFileDialog();}}>CHANGE IMAGE</button>
                 <button className={styles.deleteButton} onClick={deleteModule}><FaSkullCrossbones /> DELETE MODULE</button>
                 {!module.published ? <button className="important" onClick={e => publishCourse(e, true)}><BsBroadcastPin /> PUBLISH MODULE</button> : <button onClick={e => publishCourse(e, false)}>UNPUBLISH MODULE</button>}
+                <button style={{backgroundColor: variables.themeBlue}} onClick={previewModule}><BsEyeFill /> {module.published ? 'VIEW MODULE' : 'PREVIEW MODULE'}</button>
             </form>
             <div className={styles.contentContainer}>
                 <h5>LESSONS</h5>

@@ -1,6 +1,6 @@
 import { Question, Word } from "@prisma/client";
 import styles from '../../Admin.module.scss';
-import React, { FormEventHandler, MouseEventHandler, useState } from "react";
+import React, { FormEventHandler, MouseEventHandler, useRef, useState } from "react";
 import { ClipLoader } from "react-spinners";
 import variables from '../../../_variables.module.scss';
 import { ModuleWithLessonsAndCourse } from "./ModuleDashboard";
@@ -11,6 +11,7 @@ import { convertBlobToURL } from "./ScreenDisplay";
 import cn from 'classnames';
 import { AiFillSound } from 'react-icons/ai';
 import { TiDelete } from "react-icons/ti";
+import Link from "next/link";
 
 export default function WordDisplay({initWords, module, initWordsToQuestions, setQuestion}: {initWords: Word[], module: ModuleWithLessonsAndCourse, initWordsToQuestions: {[id: number]: Question[]}, setQuestion: (id: Question) => void}) {
 
@@ -26,6 +27,8 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
     const [ audioBlob, setAudioBlob ] = useState<null | Blob>(null);
 
     const [ audioRecording, setAudioRecording ] = useState(false);
+
+    const topRef = useRef<HTMLInputElement | null>(null);
 
     const startRecording: MouseEventHandler = async e => {
         e.preventDefault();
@@ -96,6 +99,7 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
         setAudioBlob(null);
         
         setSelectedWord(-1);
+        topRef.current && topRef.current.focus();
     }
 
     const submitClicked: FormEventHandler<HTMLFormElement> = async e => {
@@ -143,6 +147,20 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
         </>
     );
 
+    const uploadCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !window.confirm("WARNING! This will overwrite all current words! Continue?")) return;
+        const formData = new FormData();
+        formData.append('file', e.target.files[0]);
+
+        const res = await fetch(`/api/module/${module.id}/csv/words`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await res.json();
+        location.reload();
+    }
+
     return (
         <div className={styles.lessonContentContainer}>
             <div className={styles.lessonViewContainer}>
@@ -161,6 +179,13 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
                     })}
                     {words.length === 0 && <div style={{fontStyle: 'italic', marginTop: '1rem'}}>No words yet! Create them with the word editor!</div>}
                 </div>
+                {!module.published && (<div className={styles.csvLoader}>
+                    <label>
+                        LOAD FROM CSV
+                        <input onChange={uploadCSV} type='file' accept='.csv' />
+                    </label>
+                    <Link target="_blank" href='/admin/csv'><div>Learn more</div></Link>
+                </div>)}
             </div>
             <div className={styles.lessonViewContainer}>
                 <h5>QUESTIONS</h5>
@@ -183,7 +208,7 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
                                 <ClipLoader color={variables.themeRed} loading={true} />}
                             </div>
                         </div>
-                        <input type="text" placeholder={`Word in ${module.course.language}`} value={target} onChange={e => setTarget(e.target.value.toLowerCase())} />
+                        <input ref={topRef} type="text" placeholder={`Word in ${module.course.language}`} value={target} onChange={e => setTarget(e.target.value.toLowerCase())} />
                         <input type="text" placeholder={`Meaning(s) in English`} value={native} onChange={e => setNative(e.target.value)} />
                         {audioForm}
                     </form>

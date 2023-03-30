@@ -1,11 +1,16 @@
 $background: #ffffff;
 $darkbackground: #f2f2f2;
 $superdarkbackground: #dadada;
+$ultradarkbackground: #ababab;
 
 $foreground: #4b4b4b;
 $lightforeground: #5a5a5a;
 
 $blue: #3A86FF;
+$lightblue: #6ba4ff;
+$superlightblue: #9cc2ff;
+$ultralightblue: #cee1ff;
+$darkblue: #005beb;
 
 $purple: #8338EC;
 $darkpurple: #3f0d85;
@@ -18,6 +23,10 @@ $superlightpink: #ff80b7;
 $darkpink: #800037;
 
 $gold: #FFBE0B;
+$lightgold: #ffce48;
+$superlightgold: #ffde85;
+$darkgold: #856200;
+
 
 $orange: #FB5607;
 $lightorange: #fc8045;
@@ -27,11 +36,13 @@ $darkorange: #7f2a02;
 :export {
     background: $background;
     foreground: $foreground;
+    darkbackground: $darkbackground;
     blue: $blue;
     purple: $purple;
     pink: $pink;
     lightpink: $lightpink;
     superlightpink: $superlightpink;
+    ultradarkbackground: $ultradarkbackground;
     darkpink: $darkpink;
     gold: $gold;
     orange: $orange;

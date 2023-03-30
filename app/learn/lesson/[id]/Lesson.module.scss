@@ -1,0 +1,206 @@
+@use '../../../v.module.scss';
+
+.container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.lessonMain {
+    flex: 1;
+    position: relative;
+}
+
+.screenContainer {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &.invisible {
+        transition: none;
+        transform: translateX(400px);
+        opacity: 0;
+        z-index: 1;
+    }
+
+    &.hiding {
+        transition: all 230ms ease-out;
+        transform: translateX(-400px);
+        opacity: 0;
+    }
+
+    &.visible {
+        transition: none;
+        opacity: 1;
+        transform: none;
+        z-index: 2;
+    }
+
+    &.appearing {
+        transition: all 230ms ease-out;
+        transform: none;
+        opacity: 1;
+    }
+}
+
+.screenContent {
+    height: 100%;
+    overflow: scroll;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.infoContent {
+    width: 50%;
+}
+
+.questionContent {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    input[type=text] {
+        padding: 0.8rem;
+        border-radius: 10px;
+        outline: none;
+        box-sizing: border-box;
+        width: 100%;
+        border: none;
+        background-color: v.$ultralightblue;
+        box-shadow: 0 2px 0 v.$darkpink inset;
+
+        &::placeholder {
+            color: v.$lightforeground;
+        }
+    }
+}
+
+.question {
+    font-size: 1.2rem;
+}
+
+.questionWords {
+    font-size: 1.2rem;
+    display: flex;
+    gap: 1ch;
+}
+
+.hintContainer {
+    background-color: v.$darkblue;
+    color: v.$background;
+    position: absolute;
+    display: none;
+    font-size: 0.8rem;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 5px;
+    text-align: center;
+
+    div {
+        padding: 0.2rem;
+        width: 100%;
+        border-radius: 5px;
+    }
+
+    :first-child {
+        background-color: v.$pink;
+    }
+
+    &.visible {
+        display: flex;
+    }
+}
+
+.questionTextContainer {
+    display: flex;
+    gap: 2rem;
+    padding-top: 1.6rem;
+    padding-bottom: 3.2rem;
+    
+    button {
+        height: 100px;
+        width: 100px;
+        font-size: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+.prompt {
+    font-size: 1.6rem;
+    font-weight: bolder;
+}
+
+.lessonTopBar {
+    padding: 1.6rem;
+    display: flex;
+    align-items: center;
+    gap: 1.6rem;
+    > div:first-child {
+        display: flex;
+        gap: 0.8rem;
+        button {
+            width: 100px;
+        }
+    }
+    > div:last-child {
+        flex: 1; 
+    }
+}
+
+.lessonBottomBar {
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+    gap: 16rem;
+
+    button {
+        width: 250px;
+    }
+}
+
+.border {
+    border-top: 1px solid v.$lightforeground;
+    margin-top: 0.8rem;
+}
+
+.answerContainer {
+    visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.8rem;
+    transition: transform 0.1s ease-out;
+    transform: scale(0) translateY(0);
+
+    .result {
+        background-color: v.$orange;
+        color: v.$background;
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        font-weight: 800;
+
+        &.wrong {
+            background-color: v.$pink;
+        }
+    }
+
+    &.visible {
+        visibility: visible;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.progressBarLabel {
+    font-family: inherit;
+    font-weight: bold;
+    color: v.$background;
+    padding-right: 0.4rem;
+}

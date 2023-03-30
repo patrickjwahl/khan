@@ -1,0 +1,300 @@
+@use '../v.module.scss';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    h1 {
+        margin-top: 2.4rem;
+        margin-bottom: 1.6rem;
+    }
+}
+
+.moduleHeader {
+    display: flex;
+    gap: 1.6rem;
+    align-items: center;
+    justify-content: center;
+    background-color: v.$pink;
+    color: v.$background;
+    padding: 0.8rem 1.6rem;
+    border-radius: 20px;
+    position: relative;
+    z-index: 20;
+    
+    h4 {
+        font-weight: 700;
+        text-align: center;
+    }
+
+    > :last-child {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+
+        div {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 0.8rem;
+        }
+    }
+}
+
+.moduleImageContainer {
+    height: 100px;
+    width: 100px;
+    position: relative;
+
+    img {
+        object-fit: cover;
+        clip-path: circle(50%);
+    }
+}
+
+.courseHeader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 1.6rem;
+    margin-bottom: 2.4rem;
+
+    h1 {
+        margin: 0;
+    }
+}
+
+.languageImageContainer {
+    height: 50px;
+    width: 50px;
+    position: relative;
+
+    img {
+        object-fit: cover;
+        clip-path: circle(50%);
+    }
+}
+
+.progressBarContainer {
+    display: flex;
+    justify-content: center;
+}
+
+.progressBar {
+    border: 2px solid v.$gold;
+    border-radius: 50px;
+    width: 50%;
+}
+
+@keyframes wiggle {
+    from {
+        transform: translateX(-20px);
+    }
+
+    to { 
+        transform: translateX(20px);
+    }
+}
+
+.moduleBody {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+    padding-top: 2.4rem;
+    padding-bottom: 2.4rem;
+    align-items: center;
+
+    a {
+        position: relative;
+        z-index: 200;
+        border-radius: 500px;
+
+        > div {
+            top: -60px;
+        }
+    }
+
+    > :nth-child(odd) {
+        animation: wiggle 10s linear infinite alternate-reverse;
+    }
+
+    > :nth-child(even) {
+        animation: wiggle 10s ease-out infinite alternate;
+    }
+}
+
+.lessonButton {
+    width: 150px;
+    height: 150px;
+    border-radius: 500px;
+    position: relative;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    text-align: center;
+    gap: 0.4rem;
+    padding-top: 20px;
+
+    &.current {
+        border: 10px solid v.$gold;
+        box-shadow: 0 3px 0 v.$darkgold;
+    }
+
+    &.disabled {
+        background-color: v.$lightforeground;
+    }
+}
+
+.layoutContainer {
+    display: flex;
+    position: relative;
+}
+
+.layoutNavbarContainer {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+}
+
+.layoutCourseContainer {
+    flex: 1;
+}
+
+.layoutSidebarContainer {
+    position: sticky;
+    height: 100vh;
+    overflow-y: auto;
+    top: 0;
+    padding-right: 3.2rem;
+}
+
+.layoutMainContainer {
+    flex: 1;
+    align-items: stretch;
+    display: flex;
+}
+
+.navbarContainer {
+    background-color: v.$superlightblue;
+    padding: 1.6rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    height: 100vh;
+
+    button {
+        width: 220px;
+    }
+
+    h4 {
+        font-weight: 900;
+        margin-bottom: 1.6rem;
+    }
+}
+
+.sidebarContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3.2rem 1.6rem;
+    width: 400px;
+    top: 0px;
+    gap: 1.6rem;
+    position: sticky;
+}
+
+.chartContainer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.coursesContainer {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    padding: 0.8rem;
+}
+
+.coursesDropdown {
+    position: absolute;
+    width: 100%;
+    top: 100%;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    visibility: hidden;
+
+    &.visible {
+        visibility: visible;
+
+        > div {
+            transform: scale(1);
+        }
+    }
+
+    > div {
+        background-color: v.$gold;
+        padding: 0.8rem;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        align-items: center;
+        min-width: 200px;
+        position: relative;
+        filter: drop-shadow(0 10px 15px v.$darkorange);
+        transform: scale(0);
+        transform-origin: center -20px;
+        transition: transform 0.2s ease-out;
+
+        &::after {
+            content: '';
+            position: absolute;
+            border: 20px solid v.$gold;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 20px solid transparent;
+            top: -40px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 0.4rem;
+        }
+    }
+}
+
+.xpBox {
+    background-color: v.$gold;
+    padding: 0.4rem 0.8rem;
+    margin-top: 0.4rem;
+    font-weight: 800;
+    border-radius: 10px;
+}
+
+.friendDataContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    
+    > div {
+        background-color: v.$blue;
+        color: v.$background;
+        padding: 0.4rem 0.8rem;
+        border-radius: 10px;
+        min-width: 100%;
+        display: flex;
+        justify-content: space-between;
+        gap: 1.6rem;
+    }
+}

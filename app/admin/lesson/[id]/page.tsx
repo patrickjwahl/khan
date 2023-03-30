@@ -28,6 +28,9 @@ export default async function Lesson({ params }: { params: { id: string }}) {
                 },
                 include: {
                     wordHints: {
+                        orderBy: {
+                            index: 'asc'
+                        },
                         include: {
                             wordEntity: true
                         }
@@ -52,9 +55,39 @@ export default async function Lesson({ params }: { params: { id: string }}) {
         throw new Error("Lesson not found!");
     }
 
-    if (!userCanEditCourse(user.id, lesson.module.courseId, prisma)) {
+    if (! await userCanEditCourse(user.id, lesson.module.courseId, prisma)) {
         throw new Error("You're not allowed to see that!");
     }
 
-    return <LessonDashboard initLesson={lesson} />
+    const next = await prisma.lesson.findFirst({
+        where: {
+            moduleId: lesson.moduleId,
+            index: {
+                gt: lesson.index
+            }
+        },
+        orderBy: {
+            index: 'desc'
+        },
+        select: {
+            id: true
+        }
+    });
+
+    const prev = await prisma.lesson.findFirst({
+        where: {
+            moduleId: lesson.moduleId,
+            index: {
+                lt: lesson.index
+            }
+        },
+        orderBy: {
+            index: 'asc'
+        },
+        select: {
+            id: true
+        }
+    });
+
+    return <LessonDashboard initLesson={lesson} nextId={next?.id} prevId={prev?.id} />
 }

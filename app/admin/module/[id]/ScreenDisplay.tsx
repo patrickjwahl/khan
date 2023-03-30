@@ -16,6 +16,7 @@ import { GiNotebook, GiTargetArrows } from 'react-icons/gi';
 import { TiDelete } from 'react-icons/ti';
 import { ClipLoader } from 'react-spinners';
 import WordHintEditor from '../../lesson/[id]/WordHintEditor';
+import Link from 'next/link';
 
 type QuestionWithFeedbackAndLesson = Prisma.QuestionGetPayload<{include: {feedbackRules: true, lesson: true, wordHints: { include: {wordEntity: true}}}}>;
 export type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHints: { include: {wordEntity: true}}}}>;
@@ -61,6 +62,8 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
 
     const [ audioRecording, setAudioRecording ] = useState(false);
 
+    const topRef = useRef<HTMLTextAreaElement | null>(null);
+
     useEffect(() => {
         if (forceSelectedQuestion) {
             const q = questions.filter(qu => qu.id === forceSelectedQuestion.id)[0];
@@ -86,7 +89,11 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
         setFirstPass(true);
         setInfoTitle('');
         setAudioBlob(null);
+        setForwardEnabled(true);
+        setBackwardEnabled(true);
+        setRecordingEnabled(true);
         setSelectedQuestion(-1);
+        topRef.current && topRef.current.focus();
     }
 
     const submitClicked: FormEventHandler<HTMLFormElement> = async e => {
@@ -187,6 +194,9 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
         setInfo(question.info || '');
         setInfoTitle(question.infoTitle || '');
         setSelectedQuestion(question.id);
+        setForwardEnabled(question.forwardEnabled);
+        setBackwardEnabled(question.backwardEnabled);
+        setRecordingEnabled(question.recordingEnabled);
     };
 
     const deleteRow = async (question: QuestionWithFeedback) => {
@@ -286,7 +296,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
         <>
             <div className={styles.formSectionHeader}>QUESTION INFO</div>
             <div style={{fontSize: '0.7rem'}}>Place each variation on a new line, primary variation on the first line</div>
-            <textarea wrap="off" placeholder={`${module.course.language} variations`} value={target} onChange={e => setTarget(e.target.value)} />
+            <textarea ref={topRef} wrap="off" placeholder={`${module.course.language} variations`} value={target} onChange={e => setTarget(e.target.value)} />
             <textarea wrap="off" placeholder="Native variations" value={native} onChange={e => setNative(e.target.value)} />
             <div className={styles.formSectionHeader}>RECORD AUDIO</div>
             <div className={styles.audioButtonsContainer}>
@@ -317,6 +327,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
             {wordHints.map((hint, index) => {
                 return <WordHintEditor hint={hint} setId={handleWordHintChange(index)} courseId={module.courseId} />
             })}
+            {wordHints.length > 0 && <div style={{fontStyle: 'italic', fontSize: '0.8rem'}}>Press the UPDATE button above to submit changes to word hints!</div>}
             {feedbackRulesForm}
             {notesForm}
         </>
@@ -350,6 +361,20 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
     );
 
     let formContent = type === 'INFO' ? infoForm : newQuestionForm;
+
+    const uploadCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !window.confirm("WARNING! This will overwrite all current screens, including info screens! Continue?")) return;
+        const formData = new FormData();
+        formData.append('file', e.target.files[0]);
+
+        const res = await fetch(`/api/module/${module.id}/csv`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await res.json();
+        location.reload();
+    }
 
     return (<>
         <div className={styles.lessonContentContainer}>
@@ -396,6 +421,13 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
                         </table>
                         </div>
                     ) : (<div className={styles.noScreens}>No screens yet! Create them with the screen editor.</div>)}
+                    {!module.published && (<div className={styles.csvLoader}>
+                        <label>
+                            LOAD FROM CSV
+                            <input onChange={uploadCSV} type='file' accept='.csv' />
+                        </label>
+                        <Link target='_blank' href='/admin/csv'><div>Learn more</div></Link>
+                    </div>)}
                 </div>
                 <div className={styles.editor}>
                     <div>

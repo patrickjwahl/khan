@@ -63,7 +63,7 @@ export default function LoginContent() {
                     {passwordError && <div className={styles.errorMessage}><div>{passwordError}</div></div>}
                 </div>
                 <div>
-                    <input className={cn('orange', {'working': isSubmitting})} type="submit" value="LOG IN" />
+                    <input className={cn('orange', {'working': isSubmitting})} type="submit" value={isSubmitting ? '...' : 'LOG IN'} />
                 </div>
             </form>
             <div className={styles.bottomContainer}>

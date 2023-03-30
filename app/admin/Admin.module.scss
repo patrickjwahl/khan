@@ -465,6 +465,13 @@
     gap: 1rem;
 }
 
+@media screen and (max-width: 1100px) {
+    .lessonContentContainer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+}
+
 .lessonViewContainer {
 
     color: variables.$background-color;
@@ -526,6 +533,7 @@
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
+    gap: 1rem;
 }
 
 .editorContainer {
@@ -628,5 +636,73 @@
     img {
         object-fit: cover;
         clip-path: circle(50%);
+    }
+}
+
+.csvLoader {
+
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+
+    a {
+        text-decoration: underline;
+    }
+
+    input {
+        display: none;
+    }
+
+    label {
+        background-color: variables.$theme-green;
+        border: none;
+        padding: .75rem .5rem;
+        border-radius: 10px;
+        cursor: pointer;
+        color: variables.$background-color;
+        width: fit-content;
+        white-space: nowrap;
+        
+        &:hover {
+            filter: brightness(110%);
+        }
+
+        &:active {
+            filter: brightness(80%);
+        }
+
+        &.important {
+            font-weight: bold;
+        }
+    }
+}
+
+.csvInfoContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0.8rem;
+    padding-top: 2.4rem;
+
+    h1 {
+        margin-bottom: 1.6rem;
+    }
+
+    h4 {
+        margin-bottom: 0.4rem;
+    }
+
+    p {
+        max-width: 900px;
+    }
+
+    table {
+        border-collapse: collapse;
+        margin-bottom: 1.6rem;
+        max-width: 900px;
+        th, td {
+            border: 2px solid variables.$foreground-color;
+            padding: 0.4rem;
+        }
     }
 }

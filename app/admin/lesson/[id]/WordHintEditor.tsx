@@ -1,6 +1,7 @@
 import { MouseEventHandler, useState } from 'react';
 import styles from '../../Admin.module.scss';
 import { WordHint } from './LessonDashboard';
+import { FaArrowRight } from 'react-icons/fa';
 
 
 export default function WordHintEditor({hint, setId, courseId}: {hint: WordHint, setId: (id: number) => void, courseId: number}) {
@@ -28,8 +29,9 @@ export default function WordHintEditor({hint, setId, courseId}: {hint: WordHint,
     return (
         <>
         <div style={{display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem'}}>
-            <div style={{display: 'flex', gap: '0.8rem'}}>
-                <div>{hint.wordString}</div>
+            <div style={{display: 'flex', gap: '0.8rem', alignItems: 'center'}}>
+                <div><b>{hint.wordString}</b></div>
+                <FaArrowRight />
                 <div>{targetOverride || hint.wordEntity && `${hint.wordEntity.target} (${hint.wordEntity.native})` || <i>None</i>}</div>
             </div>
             <div style={{display: 'flex', gap: '0.8rem'}}>

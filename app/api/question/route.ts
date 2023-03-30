@@ -59,7 +59,8 @@ export async function POST(request: NextRequest) {
     await prisma.wordHint.deleteMany({where: {questionId: updatedQuestion.id}});
     if (targetChanged && updatedQuestion.target) {
 
-        const newWords = updatedQuestion.target.split('\n')[0].replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").split(' ');
+        const newWords = updatedQuestion.target.split('\n')[0].replace(/[.,\/#!\?$%\^&\*;:{}=\-_`~()]/g,"").split(' ');
+        let index = 0;
         for (const wordString of newWords) {
             const guessFromWordHints = await prisma.wordHint.findFirst({where: {question: {lesson: {module: {courseId: courseId}}}, wordString: wordString.toLowerCase(), wordEntityId: {not: null}}});
             if (guessFromWordHints) {
@@ -67,7 +68,8 @@ export async function POST(request: NextRequest) {
                     data: {
                         wordString: wordString.toLowerCase(),
                         questionId: updatedQuestion.id,
-                        wordEntityId: guessFromWordHints.wordEntityId
+                        wordEntityId: guessFromWordHints.wordEntityId,
+                        index: index
                     }
                 })
             } else {
@@ -77,7 +79,8 @@ export async function POST(request: NextRequest) {
                         data: {
                             wordString: wordString.toLowerCase(),
                             questionId: updatedQuestion.id,
-                            wordEntityId: guessFromWords.id
+                            wordEntityId: guessFromWords.id,
+                            index: index
                         }
                     });
                 } else {
@@ -85,17 +88,20 @@ export async function POST(request: NextRequest) {
                         data: {
                             wordString: wordString.toLowerCase(),
                             questionId: updatedQuestion.id,
-                            wordEntityId: null
+                            wordEntityId: null,
+                            index: index
                         }
                     });
                 }
             }
+            index += 1;
         }
     } else {
         const wordHintCreates = wordHints.map((wordHint: WordHint) => ({
             questionId: wordHint.questionId,
             wordString: wordHint.wordString.toLowerCase(),
-            wordEntityId: wordHint.wordEntityId
+            wordEntityId: wordHint.wordEntityId,
+            index: wordHint.index
         }));
 
         await prisma.wordHint.createMany({data: wordHintCreates});

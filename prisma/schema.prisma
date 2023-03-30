@@ -25,28 +25,30 @@ model Course {
 }
 
 model Module {
-    id           Int        @id @default(autoincrement())
-    course       Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
-    courseId     Int        @map("course_id")
-    isCheckpoint Boolean    @default(false) @map("is_checkpoint")
+    id           Int          @id @default(autoincrement())
+    course       Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    courseId     Int          @map("course_id")
+    isCheckpoint Boolean      @default(false) @map("is_checkpoint")
     lessons      Lesson[]
     title        String
     index        Int
     image        String?
-    published    Boolean    @default(false)
+    published    Boolean      @default(false)
     questions    Question[]
     words        Word[]
+    userCourses  UserCourse[]
 
     @@map("modules")
 }
 
 model Lesson {
-    id        Int        @id @default(autoincrement())
-    questions Question[]
-    module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-    moduleId  Int        @map("module_id")
-    title     String
-    index     Int
+    id          Int          @id @default(autoincrement())
+    questions   Question[]
+    module      Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+    moduleId    Int          @map("module_id")
+    title       String
+    index       Int
+    userCourses UserCourse[]
 
     @@map("lessons")
 }
@@ -83,6 +85,7 @@ model WordHint {
     wordString   String   @map("word_string")
     wordEntity   Word?    @relation(fields: [wordEntityId], references: [id], onDelete: SetNull)
     wordEntityId Int?
+    index        Int?
 
     @@map("word_hints")
 }
@@ -131,10 +134,29 @@ model User {
     @@map("users")
 }
 
+model Exp {
+    id           Int        @id @default(autoincrement())
+    userCourse   UserCourse @relation(fields: [userCourseId], references: [id], onDelete: Cascade)
+    date         String
+    amount       Int
+    userCourseId Int        @map("user_course_id")
+
+    @@map("exp")
+}
+
 model UserCourse {
-    id       Int    @id @default(autoincrement())
-    user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId   Int    @map("user_id")
-    course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-    courseId Int    @map("course_id")
+    id                Int     @id @default(autoincrement())
+    user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId            Int     @map("user_id")
+    course            Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    courseId          Int     @map("course_id")
+    currentModule     Module  @relation(fields: [moduleId], references: [id])
+    currentLesson     Lesson  @relation(fields: [lessonId], references: [id])
+    lessonCompletions Int     @default(0) @map("lesson_completions")
+    isCurrent         Boolean @default(true) @map("is_current")
+    exp               Exp[]
+    lessonId          Int     @map("lesson_id")
+    moduleId          Int     @map("module_id")
+
+    @@map("user_course")
 }
