@@ -126,5 +126,5 @@ const splitString: (input: string) => string[] = (input: string) => {
         return splitString(newInput).flat();
     });
 
-    return variations.flat();
+    return variations.flat().map(v => v.replace(/ +/g, ' '));
 }
