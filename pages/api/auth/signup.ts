@@ -25,7 +25,7 @@ const validateEmail = (email: string) => {
 
 const validatePassword = (password: string) => {
     return String(password)
-        .match(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/);
+        .match(/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/);
 };
 
 const validateUsername = (username: string) => {
