@@ -3,7 +3,7 @@ import { parse } from 'csv-parse/sync';
 import { prisma } from "@/lib/db";
 import { useUser, userCanEditCourse } from "@/lib/user";
 
-type Row = { target: string, native: string };
+type Row = { target: string, targetSyn: string, native: string, nativeSyn: string };
 
 export async function POST(request: NextRequest, context: { params: { id: string }}) {
 
@@ -22,24 +22,41 @@ export async function POST(request: NextRequest, context: { params: { id: string
 
     await prisma.word.deleteMany({where: {moduleId: moduleId}});
 
-    const data: Row[] = parse(text, {columns: ['target', 'native']});
+    const data: Row[] = parse(text, {skip_empty_lines: true, fromLine: 2, columns: ['target', 'targetSyn', 'native', 'nativeSyn']});
     for (const row of data) {
         const word = await prisma.word.create({
             data: {
                 target: row.target,
+                targetAlt: row.targetSyn,
                 moduleId: moduleId,
-                native: row.native
+                native: row.native,
+                nativeAlt: row.nativeSyn
             }
         });
     
         await prisma.wordHint.updateMany({
             where: {
-                question: {
+                backwardQuestion: {
                     module: {
                         courseId: module.courseId
                     }
                 },
                 wordString: word.target,
+                wordEntityId: null
+            },
+            data: {
+                wordEntityId: word.id
+            }
+        });
+
+        await prisma.wordHint.updateMany({
+            where: {
+                forwardQuestion: {
+                    module: {
+                        courseId: module.courseId
+                    }
+                },
+                wordString: word.native,
                 wordEntityId: null
             },
             data: {

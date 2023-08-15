@@ -4,7 +4,7 @@ import { useUser, userCanEditCourse } from "@/lib/user";
 import { Prisma } from "@prisma/client";
 
 export type QuestionType = 'forward' | 'backward' | 'audio' | 'info';
-export type LessonQuestion = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHints: {include: {wordEntity: true}}}}> & {question: string | null, answers: string[], questionType: QuestionType};
+export type LessonQuestion = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHintsBackward: {include: {wordEntity: true}}, wordHintsForward: {include: {wordEntity: true}}}}> & {question: string | null, answers: string[], questionType: QuestionType};
 
 export default async function Lesson({ params }: { params: { id: string }}) {
 
@@ -40,7 +40,15 @@ export default async function Lesson({ params }: { params: { id: string }}) {
         },
         include: {
             feedbackRules: true,
-            wordHints: {
+            wordHintsBackward: {
+                orderBy: {
+                    index: 'asc'
+                },
+                include: {
+                    wordEntity: true
+                }
+            },
+            wordHintsForward: {
                 orderBy: {
                     index: 'asc'
                 },

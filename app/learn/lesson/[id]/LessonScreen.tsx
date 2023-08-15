@@ -47,17 +47,35 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                     <div className={styles.prompt}>Translate this sentence into {question.questionType === 'forward' ? language : 'English'}:</div>
                     <div className={styles.questionTextContainer}>
                         {question.questionType !== 'forward' && question.recording && <button onClick={() => playRecording(question.recording)}><AiFillSound /></button>}
-                        {(question.questionType === 'forward' || question.questionType === 'audio') && <div className={styles.question}>{question.questionType === 'forward' ? <span>{question.question}</span> : <i>Translate what you hear!</i>}</div>}
+                        {question.questionType === 'audio' && <div className={styles.question}>{<i>Translate what you hear!</i>}</div>}
+                        {question.questionType === 'forward' && 
+                        <div className={styles.questionWords}>
+                            {question.wordHintsForward.map((hint, index) => {
+                                return (
+                                    <div key={index}>
+                                        <div onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>{questionWords && questionWords[index]}</div>
+                                        {hint.wordEntity &&
+                                        <div className={cn(styles.hintContainer, {[styles.visible]: index === hintIndex})}>
+                                            <div>{hint.wordEntity.native}</div>
+                                            <div>{hint.wordEntity.target}</div>
+                                            {hint.wordEntity.targetAlt?.split(';').map(syn => <div>{syn}</div>)}
+                                        </div>
+                                        }
+                                    </div>
+                                )
+                            })}
+                        </div>}
                         {question.questionType === 'backward' && 
                         <div className={styles.questionWords}>
-                            {question.wordHints.map((hint, index) => {
+                            {question.wordHintsBackward.map((hint, index) => {
                                 return (
                                     <div key={index}>
                                         <div onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>{questionWords && questionWords[index]}</div>
                                         {hint.wordEntity &&
                                         <div className={cn(styles.hintContainer, {[styles.visible]: index === hintIndex})}>
                                             <div>{hint.wordEntity.target}</div>
-                                            <div>{hint.wordEntity?.native}</div>
+                                            <div>{hint.wordEntity.native}</div>
+                                            {hint.wordEntity.nativeAlt?.split(';').map(syn => <div>{syn}</div>)}
                                         </div>
                                         }
                                     </div>
@@ -65,7 +83,7 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                             })}
                         </div>}
                     </div>
-                    <input id={state === 'visible' || state === 'hiding' ? 'main-input' : 'hidden-input'} type="text" placeholder='Type your answer' value={userInput} onChange={e => onUserInput(e.target.value)} />
+                    <input disabled={correct || incorrect} id={state === 'visible' || state === 'hiding' ? 'main-input' : 'hidden-input'} type="text" placeholder='Type your answer' value={userInput} onChange={e => onUserInput(e.target.value)} />
                     <div className={styles.border} style={{visibility: correct || incorrect ? 'visible': 'hidden'}}></div>
                     <div className={cn(styles.answerContainer, {[styles.visible]: correct || incorrect})}>
                         <div className={cn(styles.result, {[styles.wrong]: incorrect})}>{correct ? 'GREAT JOB!' : 'OOPS...'}</div>
