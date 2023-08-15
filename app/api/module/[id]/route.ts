@@ -42,7 +42,15 @@ export async function GET(request: NextRequest, context: { params: {id: string}}
         }, 
         include: {
             feedbackRules: true,
-            wordHints: {
+            wordHintsForward: {
+                orderBy: {
+                    index: 'asc'
+                },
+                include: {
+                    wordEntity: true
+                }
+            },
+            wordHintsBackward: {
                 orderBy: {
                     index: 'asc'
                 },

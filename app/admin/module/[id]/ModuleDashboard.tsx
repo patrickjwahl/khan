@@ -21,7 +21,7 @@ import WordDisplay from "./WordDisplay";
 import { QuestionWithFeedback as ScreenDisplayQuestionWithFeedback } from "./ScreenDisplay";
 
 export type ModuleWithLessonsAndCourse = Prisma.ModuleGetPayload<{include: { lessons: { include: { questions: true }}, course: true }}>;
-export type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true, lesson: true, wordHints: { include: { wordEntity: true }}}}>;
+export type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true, lesson: true, wordHintsForward: { include: { wordEntity: true }}, wordHintsBackward: { include: { wordEntity: true }}}}>;
 
 export default function ModuleDashboard({ initModule, nextId, prevId, initModuleQuestions, words, wordsToQuestions }: { initModule: ModuleWithLessonsAndCourse, nextId?: number, prevId?: number, initModuleQuestions: QuestionWithFeedback[], words: Word[], wordsToQuestions: {[id: number]: Question[]} }) {
 

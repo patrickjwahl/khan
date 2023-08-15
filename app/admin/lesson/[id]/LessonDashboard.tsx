@@ -26,8 +26,8 @@ import Breadcrumbs, { Breadcrumb } from "../../Breadcrumbs";
 import WordHintEditor from "./WordHintEditor";
 import Link from "next/link";
 
-type LessonWithEverything = Prisma.LessonGetPayload<{include: { module: { include: { course: true, questions: true }}, questions: {include: { feedbackRules: true, wordHints: {include: {wordEntity: true}} }} }}>;
-type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHints: {include: {wordEntity: true}}}}>;
+type LessonWithEverything = Prisma.LessonGetPayload<{include: { module: { include: { course: true, questions: true }}, questions: {include: { feedbackRules: true, wordHintsBackward: {include: {wordEntity: true}}, wordHintsForward: {include: {wordEntity: true}} }}}}>;
+type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHintsBackward: {include: {wordEntity: true}}, wordHintsForward: {include: {wordEntity: true}}}}>;
 export type WordHint = Prisma.WordHintGetPayload<{include: {wordEntity: true}}>;
 
 export const typeToIcon = (type: QuestionType) => {
@@ -63,7 +63,8 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
     const [ native, setNative ] = useState('');
     const [ notes, setNotes ] = useState('');
     const [ feedbackRules, setFeedbackRules ] = useState<FeedbackRule[]>([]);
-    const [ wordHints, setWordHints ] = useState<WordHint[]>([]);
+    const [ wordHintsBackward, setWordHintsBackward ] = useState<WordHint[]>([]);
+    const [ wordHintsForward, setWordHintsForward ] = useState<WordHint[]>([]);
     const [ forwardEnabled, setForwardEnabled ] = useState(true);
     const [ backwardEnabled, setBackwardEnabled] = useState(true);
     const [ recordingEnabled, setRecordingEnabled ] = useState(true);
@@ -146,7 +147,8 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
         setQuestionId(null);
         setIndex(-1);
         setNotes('');
-        setWordHints([]);
+        setWordHintsBackward([]);
+        setWordHintsForward([]);
         setFirstPass(true);
         setInfo('');
         setInfoTitle('');
@@ -211,7 +213,8 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
                 infoTitle: null,
                 moduleId: lesson.moduleId,
                 lessonId: lesson.id,
-                wordHints: wordHints,
+                wordHintsBackward: wordHintsBackward,
+                wordHintsForward: wordHintsForward,
                 recording: audioURL,
                 notes: notes,
                 difficulty: null,
@@ -235,7 +238,8 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
                 lessonId: lesson.id,
                 moduleId: lesson.moduleId,
                 recording: null,
-                wordHints: [],
+                wordHintsBackward: [],
+                wordHintsForward: [],
                 notes: notes,
                 difficulty: null,
                 firstPass: true,
@@ -281,7 +285,8 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
         setRecordingEnabled(question.recordingEnabled);
         setNative(question.native || '');
         setFeedbackRules(question.feedbackRules);
-        setWordHints(question.wordHints);
+        setWordHintsBackward(question.wordHintsBackward);
+        setWordHintsForward(question.wordHintsForward);
         setNotes(question.notes || '');
         setIndex(question.index);
         setFirstPass(question.firstPass);
@@ -308,13 +313,21 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
         setFeedbackRules(newRules);
     };
 
-    const handleWordHintChange = (index: number) => {
+    const handleWordHintBackwardChange = (index: number) => {
         return (wordId: number) => {
-            const newHints = [...wordHints];
+            const newHints = [...wordHintsBackward];
             newHints[index].wordEntityId = wordId;
-            setWordHints(newHints);
+            setWordHintsBackward(newHints);
         }
-    }
+    };
+
+    const handleWordHintForwardChange = (index: number) => {
+        return (wordId: number) => {
+            const newHints = [...wordHintsForward];
+            newHints[index].wordEntityId = wordId;
+            setWordHintsForward(newHints);
+        }
+    };
 
     const notesForm = (
         <>
@@ -524,11 +537,19 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
                     <input style={{marginLeft: '0.4rem'}} type="checkbox" checked={!firstPass} onChange={e => setFirstPass(!e.target.checked)} />
                 </label>
             </div>
-            <div className={styles.formSectionHeader}>WORD HINTS</div>
-            {wordHints.map((hint, index) => {
-                return <WordHintEditor hint={hint} setId={handleWordHintChange(index)} courseId={lesson.module.courseId} />
+            
+            <div className={styles.formSectionHeader}>WORD HINTS (BACKWARD)</div>
+            {wordHintsBackward.map((hint, index) => {
+                return <WordHintEditor isForward={false} hint={hint} setId={handleWordHintBackwardChange(index)} courseId={lesson.module.courseId} />
             })}
-            {wordHints.length > 0 && <div style={{fontStyle: 'italic', fontSize: '0.8rem'}}>Press the UPDATE button above to submit your changes!</div>}
+            {wordHintsBackward.length > 0 && <div style={{fontStyle: 'italic', fontSize: '0.8rem'}}>Press the UPDATE button above to submit changes to word hints!</div>}
+
+            <div className={styles.formSectionHeader}>WORD HINTS (FORWARD)</div>
+            {wordHintsForward.map((hint, index) => {
+                return <WordHintEditor isForward hint={hint} setId={handleWordHintForwardChange(index)} courseId={lesson.module.courseId} />
+            })}
+            {wordHintsForward.length > 0 && <div style={{fontStyle: 'italic', fontSize: '0.8rem'}}>Press the UPDATE button above to submit changes to word hints!</div>}
+
             {feedbackRulesForm}
             {notesForm}
         </>

@@ -21,7 +21,15 @@ export async function GET(request: NextRequest, context: { params: {id: string}}
                     index: 'asc'
                 },
                 include: {
-                    wordHints: {
+                    wordHintsBackward: {
+                        orderBy: {
+                            index: 'asc'
+                        },
+                        include: {
+                            wordEntity: true
+                        }
+                    },
+                    wordHintsForward: {
                         orderBy: {
                             index: 'asc'
                         },

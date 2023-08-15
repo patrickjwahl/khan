@@ -48,7 +48,15 @@ export default async function Module({ params }: { params: { id: string }}) {
         }, 
         include: {
             feedbackRules: true,
-            wordHints: {
+            wordHintsForward: {
+                orderBy: {
+                    index: 'asc'
+                },
+                include: {
+                    wordEntity: true
+                }
+            },
+            wordHintsBackward: {
                 orderBy: {
                     index: 'asc'
                 },
@@ -82,10 +90,13 @@ export default async function Module({ params }: { params: { id: string }}) {
         return prisma.question.findMany({
             where: {
                 moduleId: id,
-                wordHints: {
+                wordHintsForward: {
                     some: {
                         wordEntity: {
-                            target: word.target.toLowerCase()
+                            target: {
+                                equals: word.target,
+                                mode: 'insensitive'
+                            }
                         }
                     }
                 }

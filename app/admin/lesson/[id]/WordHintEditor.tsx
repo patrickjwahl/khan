@@ -4,7 +4,7 @@ import { WordHint } from './LessonDashboard';
 import { FaArrowRight } from 'react-icons/fa';
 
 
-export default function WordHintEditor({hint, setId, courseId}: {hint: WordHint, setId: (id: number) => void, courseId: number}) {
+export default function WordHintEditor({isForward, hint, setId, courseId}: {isForward: boolean, hint: WordHint, setId: (id: number) => void, courseId: number}) {
 
     const [ root, setRoot ] = useState('');
     const [ error, setError ] = useState(false);

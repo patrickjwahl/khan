@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({'code': 'UNAUTHORIZED'});
     }
 
-    const { feedbackRules, wordHints, ...requestDataNoFeedback } = requestData;
+    const { feedbackRules, wordHintsForward, wordHintsBackward, ...requestDataNoFeedback } = requestData;
     const {id, ...requestDataNoId} = requestDataNoFeedback;
 
     let targetChanged = false;
@@ -36,6 +36,13 @@ export async function POST(request: NextRequest) {
     if (!existingQuestion || existingQuestion.target?.split('\n')[0] !== requestData.target?.split('\n')[0]) {
         if (requestData.type === 'QUESTION') {
             targetChanged = true;
+        }
+    }
+
+    let nativeChanged = false;
+    if (!existingQuestion || existingQuestion.native?.split('\n')[0] !== requestData.native?.split('\n')[0]) {
+        if (requestData.type === 'QUESTION') {
+            nativeChanged = true;
         }
     }
 
@@ -56,29 +63,34 @@ export async function POST(request: NextRequest) {
     await prisma.feedbackRule.deleteMany({where: {questionId: updatedQuestion.id}});
     await prisma.feedbackRule.createMany({data: feedbackRuleCreates});
 
-    await prisma.wordHint.deleteMany({where: {questionId: updatedQuestion.id}});
+    await prisma.wordHint.deleteMany({where: {OR: {forwardQuestionId: updatedQuestion.id, backwardQuestionId: updatedQuestion.id}}});
+
+    // Word hints for translating target to native
     if (targetChanged && updatedQuestion.target) {
 
         const newWords = updatedQuestion.target.split('\n')[0].replace(/[.,\/#!\?$%\^&\*;:{}=\-_`~()]/g,"").split(' ');
         let index = 0;
         for (const wordString of newWords) {
-            const guessFromWordHints = await prisma.wordHint.findFirst({where: {question: {lesson: {module: {courseId: courseId}}}, wordString: wordString.toLowerCase(), wordEntityId: {not: null}}});
+            const guessFromWordHints = await prisma.wordHint.findFirst({where: {backwardQuestion: {lesson: {module: {courseId: courseId}}}, wordString: {equals: wordString, mode: 'insensitive'}, wordEntityId: {not: null}}});
             if (guessFromWordHints) {
                 await prisma.wordHint.create({
                     data: {
-                        wordString: wordString.toLowerCase(),
-                        questionId: updatedQuestion.id,
+                        wordString: wordString,
+                        backwardQuestionId: updatedQuestion.id,
                         wordEntityId: guessFromWordHints.wordEntityId,
                         index: index
                     }
                 })
             } else {
-                const guessFromWords = await prisma.word.findFirst({where: {module: { courseId: courseId}, target: wordString.toLowerCase()}});
+                let guessFromWords = await prisma.word.findFirst({where: {module: { courseId: courseId}, target: {equals: wordString, mode: 'insensitive'}}});
+                if (!guessFromWords) {
+                    guessFromWords = await prisma.word.findFirst({where: {module: {courseId}, targetAlt: {contains: wordString, mode: 'insensitive'}}});
+                }
                 if (guessFromWords) {
                     await prisma.wordHint.create({
                         data: {
-                            wordString: wordString.toLowerCase(),
-                            questionId: updatedQuestion.id,
+                            wordString: wordString,
+                            backwardQuestionId: updatedQuestion.id,
                             wordEntityId: guessFromWords.id,
                             index: index
                         }
@@ -86,8 +98,8 @@ export async function POST(request: NextRequest) {
                 } else {
                     await prisma.wordHint.create({
                         data: {
-                            wordString: wordString.toLowerCase(),
-                            questionId: updatedQuestion.id,
+                            wordString: wordString,
+                            backwardQuestionId: updatedQuestion.id,
                             wordEntityId: null,
                             index: index
                         }
@@ -98,8 +110,62 @@ export async function POST(request: NextRequest) {
         }
     } else {
         const wordHintCreates = wordHints.map((wordHint: WordHint) => ({
-            questionId: wordHint.questionId,
-            wordString: wordHint.wordString.toLowerCase(),
+            backwardQuestionId: wordHint.backwardQuestionId,
+            wordString: wordHint.wordString,
+            wordEntityId: wordHint.wordEntityId,
+            index: wordHint.index
+        }));
+
+        await prisma.wordHint.createMany({data: wordHintCreates});
+    }
+
+     // Word hints for translating native to target
+     if (nativeChanged && updatedQuestion.native) {
+
+        const newWords = updatedQuestion.native.split('\n')[0].replace(/[.,\/#!\?$%\^&\*;:{}=\-_`~()]/g,"").split(' ');
+        let index = 0;
+        for (const wordString of newWords) {
+            const guessFromWordHints = await prisma.wordHint.findFirst({where: {forwardQuestion: {lesson: {module: {courseId: courseId}}}, wordString: {equals: wordString, mode: 'insensitive'}, wordEntityId: {not: null}}});
+            if (guessFromWordHints) {
+                await prisma.wordHint.create({
+                    data: {
+                        wordString: wordString,
+                        forwardQuestionId: updatedQuestion.id,
+                        wordEntityId: guessFromWordHints.wordEntityId,
+                        index: index
+                    }
+                })
+            } else {
+                let guessFromWords = await prisma.word.findFirst({where: {module: { courseId: courseId}, native: {equals: wordString, mode: 'insensitive'}}});
+                if (!guessFromWords) {
+                    guessFromWords = await prisma.word.findFirst({where: {module: {courseId}, nativeAlt: {contains: wordString, mode: 'insensitive'}}});
+                }
+                if (guessFromWords) {
+                    await prisma.wordHint.create({
+                        data: {
+                            wordString: wordString,
+                            forwardQuestionId: updatedQuestion.id,
+                            wordEntityId: guessFromWords.id,
+                            index: index
+                        }
+                    });
+                } else {
+                    await prisma.wordHint.create({
+                        data: {
+                            wordString: wordString,
+                            forwardQuestionId: updatedQuestion.id,
+                            wordEntityId: null,
+                            index: index
+                        }
+                    });
+                }
+            }
+            index += 1;
+        }
+    } else {
+        const wordHintCreates = wordHints.map((wordHint: WordHint) => ({
+            forwardQuestionId: wordHint.forwardQuestionId,
+            wordString: wordHint.wordString,
             wordEntityId: wordHint.wordEntityId,
             index: wordHint.index
         }));

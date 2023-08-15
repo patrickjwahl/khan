@@ -54,38 +54,41 @@ model Lesson {
 }
 
 model Question {
-    id               Int            @id @default(autoincrement())
-    type             QuestionType
-    native           String?
-    infoTitle        String?        @map("info_title")
-    info             String?
-    target           String?
-    lessonId         Int?           @map("lesson_id")
-    lesson           Lesson?        @relation(fields: [lessonId], references: [id], onDelete: SetNull)
-    feedbackRules    FeedbackRule[]
-    recording        String?
-    moduleId         Int            @map("module_id")
-    module           Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-    notes            String?
-    difficulty       Int?
-    firstPass        Boolean        @default(true)
-    index            Int
-    wordHints        WordHint[]
-    forwardEnabled   Boolean        @default(true)
-    backwardEnabled  Boolean        @default(true)
-    recordingEnabled Boolean        @default(true)
+    id                Int            @id @default(autoincrement())
+    type              QuestionType
+    native            String?
+    infoTitle         String?        @map("info_title")
+    info              String?
+    target            String?
+    lessonId          Int?           @map("lesson_id")
+    lesson            Lesson?        @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+    feedbackRules     FeedbackRule[]
+    recording         String?
+    moduleId          Int            @map("module_id")
+    module            Module         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+    notes             String?
+    difficulty        Int?
+    firstPass         Boolean        @default(true)
+    index             Int
+    wordHintsForward  WordHint[]     @relation("forward")
+    wordHintsBackward WordHint[]     @relation("backward")
+    forwardEnabled    Boolean        @default(true)
+    backwardEnabled   Boolean        @default(true)
+    recordingEnabled  Boolean        @default(true)
 
     @@map("questions")
 }
 
 model WordHint {
-    id           Int      @id @default(autoincrement())
-    question     Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-    questionId   Int      @map("question_id")
-    wordString   String   @map("word_string")
-    wordEntity   Word?    @relation(fields: [wordEntityId], references: [id], onDelete: SetNull)
-    wordEntityId Int?
-    index        Int?
+    id                 Int       @id @default(autoincrement())
+    forwardQuestion    Question? @relation(name: "forward", fields: [forwardQuestionId], references: [id], onDelete: Cascade)
+    forwardQuestionId  Int?      @map("forward_question_id")
+    backwardQuestion   Question? @relation(name: "backward", fields: [backwardQuestionId], references: [id], onDelete: Cascade)
+    backwardQuestionId Int?      @map("backward_question_id")
+    wordString         String    @map("word_string")
+    wordEntity         Word?     @relation(fields: [wordEntityId], references: [id], onDelete: SetNull)
+    wordEntityId       Int?
+    index              Int?
 
     @@map("word_hints")
 }
@@ -110,7 +113,9 @@ enum QuestionType {
 model Word {
     id        Int        @id @default(autoincrement())
     native    String
+    nativeAlt String?    @map("native_alt")
     target    String
+    targetAlt String?    @map("target_alt")
     recording String?
     module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
     moduleId  Int

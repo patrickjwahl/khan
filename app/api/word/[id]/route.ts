@@ -20,8 +20,10 @@ export async function POST(request: NextRequest, context: { params: {id: string}
         },
         data: {
             target: requestData.target,
+            targetAlt: requestData.targetAlt,
             moduleId: requestData.moduleId,
             native: requestData.native,
+            nativeAlt: requestData.nativeAlt,
             recording: requestData.recording
         }
     });

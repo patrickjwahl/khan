@@ -15,18 +15,18 @@ export async function POST(request: NextRequest) {
     const word = await prisma.word.create({
         data: {
             target: requestData.target,
+            targetAlt: requestData.targetAlt,
             moduleId: requestData.moduleId,
             native: requestData.native,
+            nativeAlt: requestData.nativeAlt,
             recording: requestData.recording
         }
     });
 
     await prisma.wordHint.updateMany({
         where: {
-            question: {
-                module: {
-                    courseId: courseId
-                }
+            backwardQuestion: {
+                module: {courseId}
             },
             wordString: word.target,
             wordEntityId: null
@@ -35,6 +35,19 @@ export async function POST(request: NextRequest) {
             wordEntityId: word.id
         }
     });
+
+    await prisma.wordHint.updateMany({
+        where: {
+            forwardQuestion: {
+                module: {courseId}
+            },
+            wordString: word.native,
+            wordEntityId: null
+        },
+        data: {
+            wordEntityId: word.id
+        }
+    })
 
     return NextResponse.json({code: 'OK'});
 }

@@ -18,8 +18,8 @@ import { ClipLoader } from 'react-spinners';
 import WordHintEditor from '../../lesson/[id]/WordHintEditor';
 import Link from 'next/link';
 
-type QuestionWithFeedbackAndLesson = Prisma.QuestionGetPayload<{include: {feedbackRules: true, lesson: true, wordHints: { include: {wordEntity: true}}}}>;
-export type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHints: { include: {wordEntity: true}}}}>;
+type QuestionWithFeedbackAndLesson = Prisma.QuestionGetPayload<{include: {feedbackRules: true, lesson: true, wordHintsBackward: { include: {wordEntity: true}}, wordHintsForward: { include: {wordEntity: true}}}}>;
+export type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHintsForward: { include: {wordEntity: true}}, wordHintsBackward: { include: {wordEntity: true}}}}>;
 
 export const convertBlobToURL = (blob: Blob | null): Promise<string | null> | null => {
 
@@ -41,7 +41,8 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
     const [ questionId, setQuestionId ] = useState<number | null>(null);
     const [ target, setTarget ] = useState('');
     const [ native, setNative ] = useState('');
-    const [ wordHints, setWordHints ] = useState<WordHint[]>([]);
+    const [ wordHintsForward, setWordHintsForward ] = useState<WordHint[]>([]);
+    const [ wordHintsBackward, setWordHintsBackward ] = useState<WordHint[]>([]);
     const [ notes, setNotes ] = useState('');
     const [ feedbackRules, setFeedbackRules ] = useState<FeedbackRule[]>([]);
     const [ index, setIndex ] = useState(-1);
@@ -69,8 +70,6 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
             const q = questions.filter(qu => qu.id === forceSelectedQuestion.id)[0];
             editRow(q);
             const el = document.getElementById(`question-${q.id}`);
-            console.log(q.id);
-            console.log(el);
             el?.scrollIntoView({block: 'center'});
             ackSelectedQuestion();
         } 
@@ -84,7 +83,8 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
         setIndex(-1);
         setNotes('');
         setInfo('');
-        setWordHints([]);
+        setWordHintsForward([]);
+        setWordHintsBackward([]);
         setLessonId(null);
         setFirstPass(true);
         setInfoTitle('');
@@ -125,7 +125,8 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
                 firstPass: firstPass,
                 index: index < 0 ? maxIndex : index,
                 feedbackRules: feedbackRules,
-                wordHints: wordHints,
+                wordHintsBackward: wordHintsBackward,
+                wordHintsForward: wordHintsForward,
                 forwardEnabled,
                 backwardEnabled,
                 recordingEnabled
@@ -148,7 +149,8 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
                 firstPass: true,
                 index: index < 0 ? maxIndex : index,
                 feedbackRules: [],
-                wordHints: [],
+                wordHintsForward: [],
+                wordHintsBackward: [],
                 forwardEnabled: false,
                 backwardEnabled: false,
                 recordingEnabled: false
@@ -188,7 +190,8 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
         setFeedbackRules(question.feedbackRules);
         setNotes(question.notes || '');
         setLessonId(question.lessonId);
-        setWordHints(question.wordHints);
+        setWordHintsForward(question.wordHintsForward);
+        setWordHintsBackward(question.wordHintsBackward);
         setIndex(question.index);
         setFirstPass(question.firstPass);
         setInfo(question.info || '');
@@ -261,13 +264,21 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
         audio.play();
     };
 
-    const handleWordHintChange = (index: number) => {
+    const handleWordHintForwardChange = (index: number) => {
         return (wordId: number) => {
-            const newHints = [...wordHints];
+            const newHints = [...wordHintsForward];
             newHints[index].wordEntityId = wordId;
-            setWordHints(newHints);
+            setWordHintsForward(newHints);
         }
-    }
+    };
+
+    const handleWordHintBackwardChange = (index: number) => {
+        return (wordId: number) => {
+            const newHints = [...wordHintsBackward];
+            newHints[index].wordEntityId = wordId;
+            setWordHintsBackward(newHints);
+        }
+    };
 
 
     const notesForm = (
@@ -323,11 +334,19 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
                     <input style={{marginLeft: '0.4rem'}} type="checkbox" checked={!firstPass} onChange={e => setFirstPass(!e.target.checked)} />
                 </label>
             </div>
-            <div className={styles.formSectionHeader}>WORD HINTS</div>
-            {wordHints.map((hint, index) => {
-                return <WordHintEditor hint={hint} setId={handleWordHintChange(index)} courseId={module.courseId} />
+
+            <div className={styles.formSectionHeader}>WORD HINTS (BACKWARD)</div>
+            {wordHintsBackward.map((hint, index) => {
+                return <WordHintEditor isForward={false} hint={hint} setId={handleWordHintBackwardChange(index)} courseId={module.courseId} />
             })}
-            {wordHints.length > 0 && <div style={{fontStyle: 'italic', fontSize: '0.8rem'}}>Press the UPDATE button above to submit changes to word hints!</div>}
+            {wordHintsBackward.length > 0 && <div style={{fontStyle: 'italic', fontSize: '0.8rem'}}>Press the UPDATE button above to submit changes to word hints!</div>}
+
+            <div className={styles.formSectionHeader}>WORD HINTS (FORWARD)</div>
+            {wordHintsForward.map((hint, index) => {
+                return <WordHintEditor isForward hint={hint} setId={handleWordHintForwardChange(index)} courseId={module.courseId} />
+            })}
+            {wordHintsForward.length > 0 && <div style={{fontStyle: 'italic', fontSize: '0.8rem'}}>Press the UPDATE button above to submit changes to word hints!</div>}
+
             {feedbackRulesForm}
             {notesForm}
         </>

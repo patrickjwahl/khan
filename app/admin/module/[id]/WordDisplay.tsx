@@ -23,7 +23,9 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
 
     const [ wordId, setWordId ] = useState<null | number>(null);
     const [ target, setTarget ] = useState('');
+    const [ targetAlt, setTargetAlt ] = useState('');
     const [ native, setNative ] = useState('');
+    const [ nativeAlt, setNativeAlt ] = useState('');
     const [ audioBlob, setAudioBlob ] = useState<null | Blob>(null);
 
     const [ audioRecording, setAudioRecording ] = useState(false);
@@ -86,7 +88,9 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
         }
         setWordId(word.id);
         setTarget(word.target);
+        setTargetAlt(word.targetAlt || '');
         setNative(word.native);
+        setNativeAlt(word.nativeAlt || '');
 
         setSelectedWord(word.id);
     }
@@ -95,7 +99,9 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
 
         setWordId(null);
         setTarget('');
+        setTargetAlt('');
         setNative('');
+        setNativeAlt('');
         setAudioBlob(null);
         
         setSelectedWord(-1);
@@ -113,7 +119,9 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
         let payload: Word = {
             id: wordId || -1,
             target: target,
+            targetAlt: targetAlt || null,
             native: native,
+            nativeAlt: nativeAlt || null,
             moduleId: module.id,
             recording: audioURL
         };
@@ -208,8 +216,12 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
                                 <ClipLoader color={variables.themeRed} loading={true} />}
                             </div>
                         </div>
-                        <input ref={topRef} type="text" placeholder={`Word in ${module.course.language}`} value={target} onChange={e => setTarget(e.target.value.toLowerCase())} />
-                        <input type="text" placeholder={`Meaning(s) in English`} value={native} onChange={e => setNative(e.target.value)} />
+                        <div className={styles.formSectionHeader}>{module.course.language.toUpperCase()}</div>
+                        <input ref={topRef} type="text" placeholder={`Word in ${module.course.language}`} value={target} onChange={e => setTarget(e.target.value)} />
+                        <input type="text" placeholder={`Synonyms (semicolon separated)`} value={targetAlt} onChange={e => setTargetAlt(e.target.value)} />
+                        <div className={styles.formSectionHeader}>ENGLISH</div>
+                        <input type="text" placeholder={`Word in English`} value={native} onChange={e => setNative(e.target.value)} />
+                        <input type="text" placeholder={`Synonyms (semicolon separated)`} value={nativeAlt} onChange={e => setNativeAlt(e.target.value)} />
                         {audioForm}
                     </form>
                 </div>

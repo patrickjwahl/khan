@@ -27,7 +27,15 @@ export default async function Lesson({ params }: { params: { id: string }}) {
                     index: 'asc'
                 },
                 include: {
-                    wordHints: {
+                    wordHintsBackward: {
+                        orderBy: {
+                            index: 'asc'
+                        },
+                        include: {
+                            wordEntity: true
+                        }
+                    },
+                    wordHintsForward: {
                         orderBy: {
                             index: 'asc'
                         },

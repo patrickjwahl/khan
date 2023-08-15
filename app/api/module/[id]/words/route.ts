@@ -13,7 +13,7 @@ export async function GET(request: NextRequest, context: { params: {id: string}}
         return prisma.question.findMany({
             where: {
                 moduleId: moduleId,
-                wordHints: {
+                wordHintsBackward: {
                     some: {
                         wordEntity: {
                             target: word.target.toLowerCase()
