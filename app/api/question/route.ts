@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
             index += 1;
         }
     } else {
-        const wordHintCreates = wordHints.map((wordHint: WordHint) => ({
+        const wordHintCreates = wordHintsBackward.map((wordHint: WordHint) => ({
             backwardQuestionId: wordHint.backwardQuestionId,
             wordString: wordHint.wordString,
             wordEntityId: wordHint.wordEntityId,
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
             index += 1;
         }
     } else {
-        const wordHintCreates = wordHints.map((wordHint: WordHint) => ({
+        const wordHintCreates = wordHintsForward.map((wordHint: WordHint) => ({
             forwardQuestionId: wordHint.forwardQuestionId,
             wordString: wordHint.wordString,
             wordEntityId: wordHint.wordEntityId,
