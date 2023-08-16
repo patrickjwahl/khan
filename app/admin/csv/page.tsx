@@ -28,7 +28,7 @@ export default function Page() {
                     <tr>
                         <td>esa</td>
                         <td></td>
-                        <td>that (fem., singular)</td>
+                        <td>that</td>
                         <td></td>
                     </tr>
                 </tbody>

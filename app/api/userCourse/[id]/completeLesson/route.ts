@@ -16,6 +16,7 @@ export async function POST(request: NextRequest, context: { params: {id: string}
             id: id
         },
         include: {
+            user: true,
             course: {
                 include: {
                     modules: {
@@ -33,6 +34,23 @@ export async function POST(request: NextRequest, context: { params: {id: string}
 
     if (!userCourse) return NextResponse.json({code: 'NO_SUCH_ITEM'});
     if (!userCourse.course.published) return NextResponse.json({code: 'OK'});
+
+    const lastUpdated = userCourse.user.lastLesson;
+    let streak = 1
+    const now = new Date();
+    if (lastUpdated && lastUpdated.getDate() == now.getDate() && (now.getTime() - lastUpdated.getTime()) < (36*60*60*1000)) {
+        streak = userCourse.user.streak; // date is same so no streak update
+    } else if (lastUpdated && lastUpdated.getDate() != now.getDate() && (now.getTime() - lastUpdated.getTime()) < (36*60*60*1000)) {
+        streak = userCourse.user.streak + 1;
+    }
+
+    prisma.user.update({
+        where: {id: userCourse.userId},
+        data: {
+            streak,
+            lastLesson: now
+        }
+    });
 
     const lesson = await prisma.lesson.findFirst({
         where: {
