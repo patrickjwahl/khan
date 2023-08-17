@@ -5,6 +5,7 @@ import cn from 'classnames';
 import { LessonQuestion } from './page';
 import { AiFillAudio, AiFillSound } from 'react-icons/ai';
 import { useEffect, useState } from 'react';
+import ReactDOMServer from 'react-dom/server';
 
 export const playRecording = (recording: string | null) => {
 
@@ -33,6 +34,55 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
             setAudioPlayed(false);
         }
     }, [state]);
+
+    useEffect(() => {
+        const showVocabHint = (e: MouseEvent) => {
+            if (e.target instanceof HTMLElement) {
+                const word = e.target.dataset.word?.toLowerCase();
+                let wordEntity;
+                if (word && (wordEntity = question.vocabWords[word])) {
+                    const htmlText = ` 
+                        <div class="${styles.hintContainer} ${styles.visible}"> 
+                            <div>${wordEntity.target}</div>
+                            <div>${wordEntity.native}</div>
+                            ${wordEntity.nativeAlt?.split(';').map(syn => `<div>${syn}</div>`) || ''}
+                        </div>
+                        `
+                    e.target.insertAdjacentHTML('beforeend', htmlText);
+                    playRecording(wordEntity.recording);
+                }
+            }
+        };
+
+        const hideVocabHint = (e: MouseEvent) => {
+            if (e.target instanceof HTMLElement) {
+                const word = e.target.dataset.word;
+                if (word) {
+                    e.target.innerHTML = word;
+                }
+            }
+        }
+
+        const vocabWordElts = document.getElementsByClassName('lesson-vocab-word');
+        for (let i = 0; i < vocabWordElts.length; i++) {
+            const elt = vocabWordElts[i];
+            if (elt instanceof HTMLDivElement) {
+                elt.addEventListener('mouseenter', showVocabHint);
+                elt.addEventListener('mouseleave', hideVocabHint);
+            }
+        }
+
+        return () => {
+            const vocabWordElts = document.getElementsByClassName('lesson-vocab-word');
+            for (let i = 0; i < vocabWordElts.length; i++) {
+                const elt = vocabWordElts[i];
+                if (elt instanceof HTMLDivElement) {
+                    elt.removeEventListener('mouseenter', showVocabHint);
+                    elt.removeEventListener('mouseleave', hideVocabHint);
+                }
+            }
+        }
+    }, []);
 
     return (
         <div className={cn(styles.screenContainer, {[styles.invisible]: state === 'invisible', [styles.hiding]: state === 'hiding', [styles.visible]: state === 'visible', [styles.appearing]: state === 'appearing'})}>

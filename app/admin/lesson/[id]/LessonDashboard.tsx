@@ -501,6 +501,7 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
         <>
             <div className={styles.formSectionHeader}>LESSON INFORMATION</div>
             <input type="text" placeholder="Title" value={infoTitle} onChange={e => setInfoTitle(e.target.value)} />
+            <div style={{fontSize: '12px', textAlign: 'center'}}>Enter vocab words between {"{brackets}"} so they'll play a pronunciation when users hover over them!</div>
             <InfoEditor data={info} setData={setInfo} />
             {notesForm}
         </>

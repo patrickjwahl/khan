@@ -1,0 +1,7 @@
+@use 'v.module';
+
+.lesson-vocab-word {
+    font-weight: bold;
+    color: v.$darkblue;
+    display: inline-block;
+}
