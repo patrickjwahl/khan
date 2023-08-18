@@ -1,6 +1,6 @@
 import { Question, Word } from "@prisma/client";
 import styles from '../../Admin.module.scss';
-import React, { FormEventHandler, MouseEventHandler, useRef, useState } from "react";
+import React, { FormEventHandler, MouseEventHandler, useContext, useRef, useState } from "react";
 import { ClipLoader } from "react-spinners";
 import variables from '../../../_variables.module.scss';
 import { ModuleWithLessonsAndCourse } from "./ModuleDashboard";
@@ -12,6 +12,7 @@ import cn from 'classnames';
 import { AiFillSound } from 'react-icons/ai';
 import { TiDelete } from "react-icons/ti";
 import Link from "next/link";
+import { ToastContext } from "../../Toast";
 
 export default function WordDisplay({initWords, module, initWordsToQuestions, setQuestion}: {initWords: Word[], module: ModuleWithLessonsAndCourse, initWordsToQuestions: {[id: number]: Question[]}, setQuestion: (id: Question) => void}) {
 
@@ -31,6 +32,7 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
     const [ audioRecording, setAudioRecording ] = useState(false);
 
     const topRef = useRef<HTMLInputElement | null>(null);
+    const addToast = useContext(ToastContext);
 
     const startRecording: MouseEventHandler = async e => {
         e.preventDefault();
@@ -137,6 +139,8 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
         });
 
         const data = await res.json();
+
+        addToast(wordId ? 'Word updated' : 'Word added');
 
         newWord();
         fetchWords();

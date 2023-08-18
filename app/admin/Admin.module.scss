@@ -706,3 +706,25 @@
         }
     }
 }
+
+.toastContainer {
+    position: fixed;
+    bottom: -200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    z-index: 500;
+    transition: bottom 0.2s;
+
+    > div {
+        background-color: rgba(black, 0.8);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+    }
+
+    &.visible {
+        bottom: 40px;
+    }
+}

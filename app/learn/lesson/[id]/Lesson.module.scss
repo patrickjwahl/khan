@@ -57,6 +57,14 @@
 
 .infoContent {
     width: 50%;
+
+    > h5 {
+        margin-bottom: 1.6rem;
+    }
+
+    table {
+        margin-bottom: 1.2rem;
+    }
 }
 
 .questionContent {

@@ -3,7 +3,7 @@ import styles from '../../Admin.module.scss';
 import { AiFillSound } from 'react-icons/ai';
 import { WordHint, playTableRecording, typeToIcon } from '../../lesson/[id]/LessonDashboard';
 import cn from 'classnames';
-import React, { FormEventHandler, MouseEventHandler, useEffect, useRef, useState } from 'react';
+import React, { FormEventHandler, MouseEventHandler, useContext, useEffect, useRef, useState } from 'react';
 import { HiExclamationCircle } from 'react-icons/hi';
 import variables from '../../../_variables.module.scss';
 import { useRouter } from 'next/navigation';
@@ -15,8 +15,10 @@ import { FaCheckCircle, FaStop } from 'react-icons/fa';
 import { GiNotebook, GiTargetArrows } from 'react-icons/gi';
 import { TiDelete } from 'react-icons/ti';
 import { ClipLoader } from 'react-spinners';
+import { ImEmbed2 } from 'react-icons/im';
 import WordHintEditor from '../../lesson/[id]/WordHintEditor';
 import Link from 'next/link';
+import { ToastContext } from '../../Toast';
 
 type QuestionWithFeedbackAndLesson = Prisma.QuestionGetPayload<{include: {feedbackRules: true, lesson: true, wordHintsBackward: { include: {wordEntity: true}}, wordHintsForward: { include: {wordEntity: true}}}}>;
 export type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHintsForward: { include: {wordEntity: true}}, wordHintsBackward: { include: {wordEntity: true}}}}>;
@@ -64,6 +66,8 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
     const [ audioRecording, setAudioRecording ] = useState(false);
 
     const topRef = useRef<HTMLTextAreaElement | null>(null);
+
+    const addToast = useContext(ToastContext);
 
     useEffect(() => {
         if (forceSelectedQuestion) {
@@ -168,6 +172,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
 
         const data = await res.json();
 
+        addToast(questionId ? 'Screen updated' : 'Screen added');
         fetchData();
         setIsSubmitting(false);
         newQuestion();
@@ -280,6 +285,11 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
         }
     };
 
+    const copyEmbedCode = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>, q: Question) => {
+        e.stopPropagation(); 
+        navigator.clipboard.writeText(`// -------------------------\n// EMBEDDED SENTENCE (DO NOT MODIFY)\n// ${q.target}\n#[${q.id}]\n// -------------------------`); 
+        addToast('Copied to clipboard');
+    };
 
     const notesForm = (
         <>
@@ -374,7 +384,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
         <>
             <div className={styles.formSectionHeader}>LESSON INFORMATION</div>
             <input type="text" placeholder="Title" value={infoTitle} onChange={e => setInfoTitle(e.target.value)} />
-            <div>Enter {"{vocab} {words}"} between brackets so they'll play a pronunciation when users hover over them!</div>
+            <div style={{fontSize: '12px', textAlign: 'center'}}>Enter vocab words between {"{brackets}"} so they'll play a pronunciation when users hover over them!</div>
             <InfoEditor data={info} setData={setInfo} />
             {notesForm}
         </>
@@ -411,6 +421,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
                                 <col style={{width: '10%'}}/>
                                 <col style={{width: '8%'}} />
                                 <col style={{width: '5%'}} />
+                                <col style={{width: '5%'}} />
                             </colgroup>
                             <thead>
                             <tr style={{borderBottom: '2px solid ' + variables.themeBlue}}>
@@ -420,6 +431,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
                                 <th>Native</th>
                                 <th>Notes</th>
                                 <th>Lesson</th>
+                                <th></th>
                                 <th></th>
                             </tr>
                             </thead>
@@ -433,6 +445,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
                                         <td>{q.native?.split('\n')[0]}</td>
                                         <td>{!q.notes ? (null) : <button onClick={e => notesClicked(q, e)} className={styles.iconButton}><GiNotebook /></button>}</td>
                                         <td>{q.lesson && q.lesson.index + 1}</td>
+                                        <td><button onClick={(e) => copyEmbedCode(e, q)} className={styles.iconButton}><ImEmbed2 style={{fontSize: '1.2rem'}} /></button></td>
                                         <td><button onClick={(e) => {e.stopPropagation(); deleteRow(q);}} className={styles.iconButton}><TiDelete style={{color: variables.themeRed, fontSize: '1.6rem'}} /></button></td>
                                     </tr>
                                 );

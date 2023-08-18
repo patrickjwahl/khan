@@ -35,6 +35,7 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
         }
     }, [state]);
 
+    // Show hint and play sound for vocab words
     useEffect(() => {
         const showVocabHint = (e: MouseEvent) => {
             if (e.target instanceof HTMLElement) {
@@ -61,12 +62,12 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                     e.target.innerHTML = word;
                 }
             }
-        }
+        };
 
         const vocabWordElts = document.getElementsByClassName('lesson-vocab-word');
         for (let i = 0; i < vocabWordElts.length; i++) {
             const elt = vocabWordElts[i];
-            if (elt instanceof HTMLDivElement) {
+            if (elt instanceof HTMLSpanElement) {
                 elt.addEventListener('mouseenter', showVocabHint);
                 elt.addEventListener('mouseleave', hideVocabHint);
             }
@@ -76,13 +77,61 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
             const vocabWordElts = document.getElementsByClassName('lesson-vocab-word');
             for (let i = 0; i < vocabWordElts.length; i++) {
                 const elt = vocabWordElts[i];
-                if (elt instanceof HTMLDivElement) {
+                if (elt instanceof HTMLSpanElement) {
                     elt.removeEventListener('mouseenter', showVocabHint);
                     elt.removeEventListener('mouseleave', hideVocabHint);
                 }
             }
         }
     }, []);
+
+    // Show hint and play sound for sentences
+    useEffect(() => {
+        const showSentenceHint = (e: MouseEvent) => {
+            if (e.target instanceof HTMLElement) {
+                const sentenceId = parseInt(e.target.dataset.id || '');
+                let sentenceEntity;
+                if (sentenceId && (sentenceEntity = question.vocabSentences[sentenceId])) {
+                    const htmlText = `
+                        <div class="${styles.hintContainer} ${styles.visible}">
+                            <div>${sentenceEntity.native?.split('\n')[0]}</div>
+                        </div>
+                    `
+                    e.target.insertAdjacentHTML('beforeend', htmlText);
+                    playRecording(sentenceEntity.recording);
+                }
+            }
+        };
+
+        const hideSentenceHint = (e: MouseEvent) => {
+            if (e.target instanceof HTMLElement) {
+                const id = parseInt(e.target.dataset.id || '');
+                if (id && question.vocabSentences[id]) {
+                    e.target.innerHTML = question.vocabSentences[id].target || '';
+                }
+            }
+        };
+
+        const vocabSentenceElts = document.getElementsByClassName('lesson-sentence');
+        for (let i = 0; i < vocabSentenceElts.length; i++) {
+            const elt = vocabSentenceElts[i];
+            if (elt instanceof HTMLSpanElement) {
+                elt.addEventListener('mouseenter', showSentenceHint);
+                elt.addEventListener('mouseleave', hideSentenceHint);
+            }
+        }
+
+        return () => {
+            const vocabSentenceElts = document.getElementsByClassName('lesson-sentence');
+            for (let i = 0; i < vocabSentenceElts.length; i++) {
+                const elt = vocabSentenceElts[i];
+                if (elt instanceof HTMLSpanElement) {
+                    elt.removeEventListener('mouseenter', showSentenceHint);
+                    elt.removeEventListener('mouseleave', hideSentenceHint);
+                }
+            }
+        }
+    });
 
     return (
         <div className={cn(styles.screenContainer, {[styles.invisible]: state === 'invisible', [styles.hiding]: state === 'hiding', [styles.visible]: state === 'visible', [styles.appearing]: state === 'appearing'})}>
