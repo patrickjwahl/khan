@@ -6,10 +6,12 @@ import variables from '../../v.module.scss';
 import { Course, User } from '@prisma/client';
 import { MouseEventHandler, useEffect, useState } from 'react';
 import cn from 'classnames';
+import { post } from '@/lib/api';
 
-export default function SidebarContent({ expData, otherCourses, friendData }: { expData: number[], otherCourses: Course[], friendData: (User & {exp: number})[]}) {
+export default function SidebarContent({ initStreak, userId, expData, otherCourses, friendData }: { initStreak: number, userId: number, expData: number[], otherCourses: Course[], friendData: (User & {exp: number})[]}) {
 
     const [ dropdownOpen, setDropdownOpen ] = useState(false);
+    const [ streak, setStreak ] = useState(initStreak);
 
     const chartData = expData.map((exp, index) => {
         const d = new Date();
@@ -33,6 +35,22 @@ export default function SidebarContent({ expData, otherCourses, friendData }: { 
         return () => document.removeEventListener('mousedown', hideDropdown);
     }, []);
 
+    // Check the streak using our local date and if it's expired, remove it
+    useEffect(() => {
+        (async () => {
+            const payload = {
+                date: new Date().toDateString()
+            };
+    
+            const res = await post(`/api/user/${userId}/checkStreak`, payload);
+            const data = await res.json();
+
+            if (data.code === 'OK') {
+                setStreak(data.streak);
+            }
+        })();
+    }, []);
+
     return (
         <div className={styles.sidebarContainer}>
             <div className={styles.coursesContainer}>
@@ -46,9 +64,15 @@ export default function SidebarContent({ expData, otherCourses, friendData }: { 
                     </div>
                 </div>
             </div>
-            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                <h5>Today's XP</h5>
-                <div className={styles.xpBox}>{chartData[6].exp}</div>
+            <div style={{display: 'flex', justifyContent: 'space-evenly', width: '100%'}}>
+                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                    <h5>Today's XP</h5>
+                    <div className={styles.xpBox}>{chartData[6].exp}</div>
+                </div>
+                <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                    <h5>My Streak</h5>
+                    <div className={styles.xpBox}>{streak}</div>
+                </div>
             </div>
             <div className={styles.chartContainer}>
                 <h5>This Week's Progress</h5>

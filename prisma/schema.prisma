@@ -136,7 +136,7 @@ model User {
     fakeFriends     User[]       @relation(name: "friends")
     courses         UserCourse[]
     streak          Int          @default(0)
-    lastLesson      DateTime?
+    lastLesson      String?      @default("Thu Jan 01 1970") @map("last_lesson")
 
     @@map("users")
 }

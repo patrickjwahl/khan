@@ -32,6 +32,11 @@ export default async function Sidebar({ }: {   }) {
 
     const expData = (await Promise.all(promises)).map(entry => entry._sum.amount || 0);
 
+    const userData = await prisma.user.findFirst({ where: { id: user.id }});
+    if (!userData) throw new Error("No user for some reason");
+
+    const streak = userData.streak;
+
     const otherCourses = (await prisma.userCourse.findMany({
         where: {
             isCurrent: false,
@@ -77,5 +82,5 @@ export default async function Sidebar({ }: {   }) {
         return b.exp - a.exp;
     });
     
-    return <SidebarContent expData={expData} otherCourses={otherCourses} friendData={friendProgress} />
+    return <SidebarContent initStreak={streak} userId={userData.id} expData={expData} otherCourses={otherCourses} friendData={friendProgress} />
 }

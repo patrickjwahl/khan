@@ -35,20 +35,40 @@ export async function POST(request: NextRequest, context: { params: {id: string}
     if (!userCourse) return NextResponse.json({code: 'NO_SUCH_ITEM'});
     if (!userCourse.course.published) return NextResponse.json({code: 'OK'});
 
-    const lastUpdated = userCourse.user.lastLesson;
-    let streak = 1
-    const now = new Date();
-    if (lastUpdated && lastUpdated.getDate() == now.getDate() && (now.getTime() - lastUpdated.getTime()) < (36*60*60*1000)) {
-        streak = userCourse.user.streak; // date is same so no streak update
-    } else if (lastUpdated && lastUpdated.getDate() != now.getDate() && (now.getTime() - lastUpdated.getTime()) < (36*60*60*1000)) {
-        streak = userCourse.user.streak + 1;
+    const user = await prisma.user.findFirst({
+        where: {
+            id: userCourse.userId
+        }
+    });
+
+    if (!user) {
+        throw new Error("User not found!");
     }
 
-    prisma.user.update({
-        where: {id: userCourse.userId},
+    const lastLessonDate = new Date(user.lastLesson || 'Thu Jan 01 1970');
+    const now = new Date(date);
+
+    let streak = 1;
+
+    if (lastLessonDate.toDateString() === now.toDateString()) {
+        // same day, streak stays same
+        streak = user.streak;
+    } else {
+        lastLessonDate.setHours(lastLessonDate.getHours() + 24);
+        if (lastLessonDate.toDateString() === now.toDateString()) {
+            // one day later, streak increments
+            streak = user.streak + 1;
+        }
+        // otherwise, the streak resets to 1
+    }
+
+    await prisma.user.update({
+        where: {
+            id: user.id
+        },
         data: {
             streak,
-            lastLesson: now
+            lastLesson: date
         }
     });
 
