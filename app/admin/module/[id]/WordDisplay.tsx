@@ -222,10 +222,10 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
                         </div>
                         <div className={styles.formSectionHeader}>{module.course.language.toUpperCase()}</div>
                         <input ref={topRef} type="text" placeholder={`Word in ${module.course.language}`} value={target} onChange={e => setTarget(e.target.value)} />
-                        <input type="text" placeholder={`Synonyms (semicolon separated)`} value={targetAlt} onChange={e => setTargetAlt(e.target.value)} />
+                        <input type="text" placeholder={`Alt. translations (semicolon separated)`} value={targetAlt} onChange={e => setTargetAlt(e.target.value)} />
                         <div className={styles.formSectionHeader}>ENGLISH</div>
                         <input type="text" placeholder={`Word in English`} value={native} onChange={e => setNative(e.target.value)} />
-                        <input type="text" placeholder={`Synonyms (semicolon separated)`} value={nativeAlt} onChange={e => setNativeAlt(e.target.value)} />
+                        <input type="text" placeholder={`Alt. translations (semicolon separated)`} value={nativeAlt} onChange={e => setNativeAlt(e.target.value)} />
                         {audioForm}
                     </form>
                 </div>

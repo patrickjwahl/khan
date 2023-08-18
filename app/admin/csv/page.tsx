@@ -8,14 +8,14 @@ export default function Page() {
             <p>If you want to replace a module's questions but keep its info screens, it's recommended to create a new module, load the questions into it from CSV, copy the info screens over from the old module, then delete the old module.</p>
             <p>GKA ignores the first line of your CSVs, so you can and should use this as a header to make sure the right data goes in the right columns. Files should have the following formats (below the headers are examples):</p>
             <h4>WORDS</h4>
-            <p>Synonym lists should be semicolon-separated, and can be empty!</p>
+            <p>Alternate translation lists should be semicolon-separated, and can be empty! These can include synonyms, but should mainly be used to express homonymic variant translations.</p>
             <table>
                 <thead>
                     <tr>
                         <th>Target Language Word</th>
-                        <th>Target Language Synonyms</th>
+                        <th>Alternate Translations</th>
                         <th>Native Language Word</th>
-                        <th>Native Language Synonyms</th>
+                        <th>Alternate Translations</th>
                     </tr>
                 </thead>
                 <tbody>
