@@ -2,6 +2,7 @@ import { MouseEventHandler, useState } from 'react';
 import styles from '../../Admin.module.scss';
 import { WordHint } from './LessonDashboard';
 import { FaArrowRight } from 'react-icons/fa';
+import { post } from '@/lib/api';
 
 
 export default function WordHintEditor({isForward, hint, setId, courseId}: {isForward: boolean, hint: WordHint, setId: (id: number) => void, courseId: number}) {
@@ -13,7 +14,11 @@ export default function WordHintEditor({isForward, hint, setId, courseId}: {isFo
     const findWord: MouseEventHandler = async e => {
         e.preventDefault();
 
-        const res = await fetch(`/api/word/search/${root}/${courseId}`);
+        const payload = {
+            word: root
+        };
+
+        const res = await post(`/api/word/search/${courseId}`, payload);
         const data = await res.json();
 
         if (data.code !== 'OK') {

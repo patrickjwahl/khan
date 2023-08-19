@@ -11,6 +11,7 @@ import variables from '../../../v.module.scss';
 import { useRouter } from "next/navigation";
 import { COMPLETIONS_FOR_LESSON_PASS, EXP_FOR_ALREADY_FINISHED_LESSON, EXP_FOR_LESSON_COMPLETE } from "@/lib/settings";
 import { post } from "@/lib/api";
+import { normalizeAnswer } from "@/lib/string_processing";
 
 export type ScreenState = 'hiding' | 'visible' | 'appearing' | 'invisible';
 export type LessonWithCourse = Prisma.LessonGetPayload<{include: {module: {include: {course: true}}}}>;
@@ -113,7 +114,6 @@ export default function LessonContent({ lesson, questions, userCourse, numLesson
 
         setTimeout(() => {
             setCurrentQuestion(curr => {
-                console.log('updating state');
                 return curr + 1;
             });
             setTransitioning(false);
@@ -126,14 +126,12 @@ export default function LessonContent({ lesson, questions, userCourse, numLesson
 
     const checkAnswer = () => {
         const q = screens[currentQuestion];
-        const possibleAnswers = q.answers.map(a => {
-            return a.trim().replace(/[.,\/#!\?$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase();
-        });
+        const possibleAnswers = q.answers.map(normalizeAnswer);
 
-        const userAnswer = userInput.trim().replace(/[.,\/#!\?$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase();
+        const userAnswer = normalizeAnswer(userInput);
 
         q.feedbackRules.forEach(rule => {
-            if (userAnswer === rule.trigger.trim().replace(/[.,\/#!\?$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase()) {
+            if (userAnswer === normalizeAnswer(rule.trigger)) {
                 setFeedback(rule.feedback);
             }
         });

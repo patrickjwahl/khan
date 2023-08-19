@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { getMainVariant, getTokens } from "@/lib/string_processing";
 import { useUser, userCanEditCourse } from "@/lib/user";
 import { FeedbackRule, WordHint } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
@@ -33,14 +34,14 @@ export async function POST(request: NextRequest) {
     let targetChanged = false;
 
     const existingQuestion = await prisma.question.findFirst({where: {id}});
-    if (!existingQuestion || existingQuestion.target?.split('\n')[0] !== requestData.target?.split('\n')[0]) {
+    if (!existingQuestion || getMainVariant(existingQuestion.target) !== getMainVariant(requestData.target)) {
         if (requestData.type === 'QUESTION') {
             targetChanged = true;
         }
     }
 
     let nativeChanged = false;
-    if (!existingQuestion || existingQuestion.native?.split('\n')[0] !== requestData.native?.split('\n')[0]) {
+    if (!existingQuestion || getMainVariant(existingQuestion.native) !== getMainVariant(requestData.native)) {
         if (requestData.type === 'QUESTION') {
             nativeChanged = true;
         }
@@ -63,12 +64,23 @@ export async function POST(request: NextRequest) {
     await prisma.feedbackRule.deleteMany({where: {questionId: updatedQuestion.id}});
     await prisma.feedbackRule.createMany({data: feedbackRuleCreates});
 
-    await prisma.wordHint.deleteMany({where: {OR: {forwardQuestionId: updatedQuestion.id, backwardQuestionId: updatedQuestion.id}}});
+    await prisma.wordHint.deleteMany({
+        where: {
+            OR: [
+                {
+                    forwardQuestionId: updatedQuestion.id
+                }, 
+                {
+                    backwardQuestionId: updatedQuestion.id
+                }
+            ]
+        }
+    });
 
     // Word hints for translating target to native
     if (targetChanged && updatedQuestion.target) {
 
-        const newWords = updatedQuestion.target.split('\n')[0].replace(/[.,\/#!\?$%\^&\*;:{}=\-_`~()]/g,"").split(' ');
+        const newWords = getTokens(getMainVariant(updatedQuestion.target));
         let index = 0;
         for (const wordString of newWords) {
             const guessFromWordHints = await prisma.wordHint.findFirst({where: {backwardQuestion: {lesson: {module: {courseId: courseId}}}, wordString: {equals: wordString, mode: 'insensitive'}, wordEntityId: {not: null}}});

@@ -4,6 +4,7 @@ import { useUser, userCanEditCourse } from "@/lib/user";
 import { Prisma, Question, Word } from "@prisma/client";
 import { COMMENT_REGEX, SENTENCE_REGEX, VOCAB_WORD_REGEX } from "@/lib/settings";
 import '../../../vocab-word.scss';
+import { getAllVariants, getMainVariant } from "@/lib/string_processing";
 
 export type QuestionType = 'forward' | 'backward' | 'audio' | 'info';
 export type LessonQuestion = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHintsBackward: {include: {wordEntity: true}}, wordHintsForward: {include: {wordEntity: true}}}}> & {question: string | null, answers: string[], questionType: QuestionType, vocabWords: {[w: string]: Word}, vocabSentences: {[id: number]: Question}};
@@ -123,7 +124,7 @@ export default async function Lesson({ params }: { params: { id: string }}) {
             q.info = q.info.replace(SENTENCE_REGEX, (match, token) => {
                 const id = parseInt(token);
                 if (sentences[id] && sentences[id].type === 'QUESTION') {
-                    return `<span class="lesson-sentence" data-id="${id}">${sentences[id].target}</span>`
+                    return `<span class="lesson-sentence" data-id="${id}">${getMainVariant(sentences[id].target)}</span>`
                 }
                 return '';
             });
@@ -147,10 +148,10 @@ export default async function Lesson({ params }: { params: { id: string }}) {
         }
 
         if (type === 'backward' || type === 'audio') {
-            return {...q, questionType: type, question: q.target.split('\n')[0], answers: q.native.split('\n'), vocabWords: {}, vocabSentences: {}};
+            return {...q, questionType: type, question: getMainVariant(q.target), answers: getAllVariants(q.native), vocabWords: {}, vocabSentences: {}};
         }
 
-        return {...q, questionType: type, question: q.native.split('\n')[0], answers: q.target.split('\n'), vocabWords: {}, vocabSentences: {}};
+        return {...q, questionType: type, question: getMainVariant(q.target), answers: getAllVariants(q.native), vocabWords: {}, vocabSentences: {}};
     });
 
     const questionsWithType = await Promise.all(questionsWithTypePromises);

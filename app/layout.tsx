@@ -16,7 +16,7 @@ const noto = Noto_Sans({
 const nunito = Nunito({
     subsets: ['latin', 'cyrillic'],
     style: ['normal', 'italic'],
-    variable: '--font-noto'
+    variable: '--font-nunito'
 });
 
 export default function RootLayout({

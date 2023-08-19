@@ -13,6 +13,7 @@ import { AiFillSound } from 'react-icons/ai';
 import { TiDelete } from "react-icons/ti";
 import Link from "next/link";
 import { ToastContext } from "../../Toast";
+import { getMainVariant } from "@/lib/string_processing";
 
 export default function WordDisplay({initWords, module, initWordsToQuestions, setQuestion}: {initWords: Word[], module: ModuleWithLessonsAndCourse, initWordsToQuestions: {[id: number]: Question[]}, setQuestion: (id: Question) => void}) {
 
@@ -203,7 +204,7 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
                 <h5>QUESTIONS</h5>
                 {selectedWord >= 0 && wordsToQuestions[selectedWord].map(question => {
                     return (<div key={question.id} onClick={() => setQuestion(question)} className={styles.wordContainer}>
-                        {question.target?.split('\n')[0]}
+                        {getMainVariant(question.target)}
                     </div>);
                 })}
                 {selectedWord >= 0 && wordsToQuestions[selectedWord].length === 0 && <div style={{fontStyle: 'italic', marginTop: '1rem'}}>This word isn't used in any questions... it's up to you to change that!</div>}

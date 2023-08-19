@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { parse } from 'csv-parse/sync';
 import { prisma } from "@/lib/db";
 import { useUser, userCanEditCourse } from "@/lib/user";
+import { getMainVariant, getTokens } from "@/lib/string_processing";
 
 type Row = { target: string, native: string, lesson: string, pass: string, forwardEnabled: string, backwardEnabled: string, audioEnabled: string};
 
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest,  context: { params: { id: strin
         if (!newQuestion.target || !newQuestion.native) return NextResponse.json({code: 'NULL_SENTENCE'});
 
         // backward translation hints
-        let newWords = newQuestion.target.split('\n')[0].replace(/[.,\/#!\?$%\^&\*;:{}=\-_`~()]/g,"").split(' ');
+        let newWords = getTokens(getMainVariant(newQuestion.target));
         let i = 0;
         for (const wordString of newWords) {
             const guessFromWordHints = await prisma.wordHint.findFirst({where: {backwardQuestion: {lesson: {module: {courseId: module.courseId}}}, wordString: {equals: wordString, mode: 'insensitive'}, wordEntityId: {not: null}}});
@@ -117,7 +118,7 @@ export async function POST(request: NextRequest,  context: { params: { id: strin
         }
 
         // forward translation hints
-        newWords = newQuestion.native.split('\n')[0].replace(/[.,\/#!\?$%\^&\*;:{}=\-_`~()]/g,"").split(' ');
+        newWords = getTokens(getMainVariant(newQuestion.native));
         i = 0;
         for (const wordString of newWords) {
             const guessFromWordHints = await prisma.wordHint.findFirst({where: {forwardQuestion: {lesson: {module: {courseId: module.courseId}}}, wordString: {equals: wordString, mode: 'insensitive'}, wordEntityId: {not: null}}});
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest,  context: { params: { id: strin
                 await prisma.wordHint.create({
                     data: {
                         wordString: wordString.toLowerCase(),
-                        backwardQuestionId: newQuestion.id,
+                        forwardQuestionId: newQuestion.id,
                         wordEntityId: guessFromWordHints.wordEntityId,
                         index: i
                     }

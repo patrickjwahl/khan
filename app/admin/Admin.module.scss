@@ -402,7 +402,7 @@
     position: absolute;
     display: none;
     padding: 20px;
-    z-index: 20;
+    z-index: 5000;
 
     .cancel {
         color: variables.$foreground-color;
@@ -489,6 +489,9 @@
     padding: 2rem;
     flex: 1;
     min-width: 450px;
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
 
     color: variables.$background-color;
 
@@ -498,6 +501,7 @@
         flex-direction: column;
         align-items: center;
         gap: 0.4rem;
+        position: relative;
 
         textarea {
             width: 100%;
@@ -518,7 +522,35 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: flex-start;
     width: 100%;
+    padding-bottom: 0.8rem;
+    position: sticky;
+    top: 0;
+    background-color: variables.$theme-blue;
+    border-bottom: 2px solid white;
+
+    &::before {
+        content: '';
+        position: absolute;
+        background-color: variables.$theme-blue;
+        width: 200%;
+        height: 2rem;
+        bottom: 100%;
+        left: -50%;
+    }
+
+    > div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+
+        button, input[type=submit] {
+            width: 100%;
+        }
+    }
 
     button {
         font-size: 1rem;

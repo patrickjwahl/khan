@@ -6,6 +6,7 @@ import { LessonQuestion } from './page';
 import { AiFillAudio, AiFillSound } from 'react-icons/ai';
 import { useEffect, useState } from 'react';
 import ReactDOMServer from 'react-dom/server';
+import { getMainVariant } from '@/lib/string_processing';
 
 export const playRecording = (recording: string | null) => {
 
@@ -42,11 +43,14 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                 const word = e.target.dataset.word?.toLowerCase();
                 let wordEntity;
                 if (word && (wordEntity = question.vocabWords[word])) {
+                    console.log(wordEntity.nativeAlt);
+                    console.log(wordEntity.nativeAlt?.split(';'));
+                    console.log(wordEntity.nativeAlt?.split(';').map(syn => `<div>${syn}</div>`) || '');
                     const htmlText = ` 
                         <div class="${styles.hintContainer} ${styles.visible}"> 
                             <div>${wordEntity.target}</div>
                             <div>${wordEntity.native}</div>
-                            ${wordEntity.nativeAlt?.split(';').map(syn => `<div>${syn}</div>`) || ''}
+                            ${(wordEntity.nativeAlt?.split(';').map(syn => `<div>${syn}</div>`) || []).join('\n')}
                         </div>
                         `
                     e.target.insertAdjacentHTML('beforeend', htmlText);
@@ -94,7 +98,7 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                 if (sentenceId && (sentenceEntity = question.vocabSentences[sentenceId])) {
                     const htmlText = `
                         <div class="${styles.hintContainer} ${styles.visible}">
-                            <div>${sentenceEntity.native?.split('\n')[0]}</div>
+                            <div>${getMainVariant(sentenceEntity.native)}</div>
                         </div>
                     `
                     e.target.insertAdjacentHTML('beforeend', htmlText);
@@ -107,7 +111,7 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
             if (e.target instanceof HTMLElement) {
                 const id = parseInt(e.target.dataset.id || '');
                 if (id && question.vocabSentences[id]) {
-                    e.target.innerHTML = question.vocabSentences[id].target || '';
+                    e.target.innerHTML = getMainVariant(question.vocabSentences[id].target);
                 }
             }
         };

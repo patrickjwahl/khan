@@ -19,6 +19,7 @@ import { ImEmbed2 } from 'react-icons/im';
 import WordHintEditor from '../../lesson/[id]/WordHintEditor';
 import Link from 'next/link';
 import { ToastContext } from '../../Toast';
+import { getMainVariant } from '@/lib/string_processing';
 
 type QuestionWithFeedbackAndLesson = Prisma.QuestionGetPayload<{include: {feedbackRules: true, lesson: true, wordHintsBackward: { include: {wordEntity: true}}, wordHintsForward: { include: {wordEntity: true}}}}>;
 export type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHintsForward: { include: {wordEntity: true}}, wordHintsBackward: { include: {wordEntity: true}}}}>;
@@ -175,7 +176,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
         addToast(questionId ? 'Screen updated' : 'Screen added');
         fetchData();
         setIsSubmitting(false);
-        newQuestion();
+        // newQuestion();
 
         // toggleModal();
     };
@@ -287,7 +288,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
 
     const copyEmbedCode = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>, q: Question) => {
         e.stopPropagation(); 
-        navigator.clipboard.writeText(`// -------------------------\n// EMBEDDED SENTENCE (DO NOT MODIFY)\n// ${q.target}\n#[${q.id}]\n// -------------------------`); 
+        navigator.clipboard.writeText(`// -------------------------\n// EMBEDDED SENTENCE (DO NOT MODIFY)\n// ${getMainVariant(q.target)}\n#[${q.id}]\n// -------------------------`); 
         addToast('Copied to clipboard');
     };
 
@@ -441,8 +442,8 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
                                     <tr id={`question-${q.id}`} onClick={() => editRow(q)} key={q.id} className={cn({[styles.info]: selectedQuestion === q.id})}>
                                         <td>{typeToIcon(q.type)}</td>
                                         <td>{q.type !== 'QUESTION' ? (null) : !q.recording ? <HiExclamationCircle style={{color: variables.themeRed, fontSize: '1.2rem'}} /> : <button onClick={e => {e.stopPropagation(); playTableRecording(q)}} className={styles.iconButton}><FaCheckCircle style={{color: variables.themeGreen}} /></button>}</td>
-                                        <td style={{fontWeight: q.type === 'INFO' ? 'bold' : 'normal'}}>{q.target?.split('\n')[0] || q.infoTitle}</td>
-                                        <td>{q.native?.split('\n')[0]}</td>
+                                        <td style={{fontWeight: q.type === 'INFO' ? 'bold' : 'normal'}}>{getMainVariant(q.target) || q.infoTitle}</td>
+                                        <td>{getMainVariant(q.native)}</td>
                                         <td>{!q.notes ? (null) : <button onClick={e => notesClicked(q, e)} className={styles.iconButton}><GiNotebook /></button>}</td>
                                         <td>{q.lesson && q.lesson.index + 1}</td>
                                         <td><button onClick={(e) => copyEmbedCode(e, q)} className={styles.iconButton}><ImEmbed2 style={{fontSize: '1.2rem'}} /></button></td>
@@ -473,7 +474,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
                                     <ClipLoader color={variables.themeRed} loading={true} />}
                                 </div>
                             </div>
-                            {questionId && <div style={{fontStyle: 'italic', fontSize: '0.9rem'}}>Editing "{infoTitle || target.split('\n')[0]}"</div>}
+                            {questionId && <div style={{fontStyle: 'italic', fontSize: '0.9rem'}}>Editing "{infoTitle || getMainVariant(target)}"</div>}
                             <div className={styles.formSectionHeader}>SCREEN TYPE</div>
                             <div className={styles.radioContainer}>
                                 <div className={styles.radio}>
