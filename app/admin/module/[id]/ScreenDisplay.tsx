@@ -446,7 +446,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
                                         <td>{getMainVariant(q.native)}</td>
                                         <td>{!q.notes ? (null) : <button onClick={e => notesClicked(q, e)} className={styles.iconButton}><GiNotebook /></button>}</td>
                                         <td>{q.lesson && q.lesson.index + 1}</td>
-                                        <td><button onClick={(e) => copyEmbedCode(e, q)} className={styles.iconButton}><ImEmbed2 style={{fontSize: '1.2rem'}} /></button></td>
+                                        <td><button title='Copy embed code' onClick={(e) => copyEmbedCode(e, q)} className={styles.iconButton}><ImEmbed2 style={{fontSize: '1.2rem'}} /></button></td>
                                         <td><button onClick={(e) => {e.stopPropagation(); deleteRow(q);}} className={styles.iconButton}><TiDelete style={{color: variables.themeRed, fontSize: '1.6rem'}} /></button></td>
                                     </tr>
                                 );

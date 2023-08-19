@@ -34,6 +34,7 @@ export default function LessonContent({ lesson, questions, userCourse, numLesson
 
     const [playDing] = useSound('/audio/ding.mp3');
     const [playWomp] = useSound('/audio/womp.mp3');
+    const [playHorn] = useSound('/audio/party.mp3');
 
     const router = useRouter();
 
@@ -100,10 +101,9 @@ export default function LessonContent({ lesson, questions, userCourse, numLesson
                     lessonId: lesson.id,
                 }
 
-                const res = await post(`/api/userCourse/${userCourse.id}/completeLesson`, payload);
-                const data = await res.json();
+                post(`/api/userCourse/${userCourse.id}/completeLesson`, payload);
             }
-            playDing();
+            playHorn();
             setTransitioning(true);
             router.push(`/learn/course/${lesson.module.courseId}`);
             return;

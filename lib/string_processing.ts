@@ -1,6 +1,6 @@
 const VARIANT_DELIMITER = '\n';
 const TOKEN_DELIMITER = ' ';
-const SYMBOLS_REGEX = /[.,\/#¡\?$%\^&\*;:{}=\-_`~()]/g;
+const SYMBOLS_REGEX = /[.,\/#!\?$%\^&\*;:{}=\-_`~()]/g;
 const PUNCTUATION_REGEX = /[¿¡]/g;
 
 export const getMainVariant = (variants: string | null): string => {

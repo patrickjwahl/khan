@@ -6,6 +6,7 @@ export default function Page() {
             <h1>Loading Modules from CSV</h1>
             <p>That's right, you can load modules (both words and questions) from CSV! But be warned: doing so will overwrite all the current data of that type that's present in the module. Therefore, you should only use this functionality when first creating a module.</p>
             <p>If you want to replace a module's questions but keep its info screens, it's recommended to create a new module, load the questions into it from CSV, copy the info screens over from the old module, then delete the old module.</p>
+            <p><strong>If you're using Excel or Numbers, I strongly recommend turning OFF autocorrect as well as "smart" quotations and dashes. The former will make your life easier, the latter will make sure there isn't a mismatch between what the user enters and what the expected value is.</strong></p>
             <p>GKA ignores the first line of your CSVs, so you can and should use this as a header to make sure the right data goes in the right columns. Files should have the following formats (below the headers are examples):</p>
             <h4>WORDS</h4>
             <p>Alternate translation lists should be semicolon-separated, and can be empty! These can include synonyms, but should mainly be used to express homonymic variant translations.</p>

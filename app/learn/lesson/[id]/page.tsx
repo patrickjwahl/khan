@@ -151,7 +151,7 @@ export default async function Lesson({ params }: { params: { id: string }}) {
             return {...q, questionType: type, question: getMainVariant(q.target), answers: getAllVariants(q.native), vocabWords: {}, vocabSentences: {}};
         }
 
-        return {...q, questionType: type, question: getMainVariant(q.target), answers: getAllVariants(q.native), vocabWords: {}, vocabSentences: {}};
+        return {...q, questionType: type, question: getMainVariant(q.native), answers: getAllVariants(q.target), vocabWords: {}, vocabSentences: {}};
     });
 
     const questionsWithType = await Promise.all(questionsWithTypePromises);

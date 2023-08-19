@@ -156,14 +156,16 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                             {question.wordHintsForward.map((hint, index) => {
                                 return (
                                     <div key={index}>
-                                        <div onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>{questionWords && questionWords[index]}</div>
-                                        {hint.wordEntity &&
-                                        <div className={cn(styles.hintContainer, {[styles.visible]: index === hintIndex})}>
-                                            <div>{hint.wordEntity.native}</div>
-                                            <div>{hint.wordEntity.target}</div>
-                                            {hint.wordEntity.targetAlt?.split(';').map(syn => <div>{syn}</div>)}
+                                        <div className={styles.questionToken} onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>
+                                            {questionWords && questionWords[index]}
+                                            {hint.wordEntity &&
+                                            <div className={cn(styles.hintContainer, {[styles.visible]: index === hintIndex})}>
+                                                <div>{hint.wordEntity.native}</div>
+                                                <div>{hint.wordEntity.target}</div>
+                                                {hint.wordEntity.targetAlt?.split(';').map(syn => <div>{syn}</div>)}
+                                            </div>
+                                            }
                                         </div>
-                                        }
                                     </div>
                                 )
                             })}
@@ -173,14 +175,16 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                             {question.wordHintsBackward.map((hint, index) => {
                                 return (
                                     <div key={index}>
-                                        <div onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>{questionWords && questionWords[index]}</div>
-                                        {hint.wordEntity &&
-                                        <div className={cn(styles.hintContainer, {[styles.visible]: index === hintIndex})}>
-                                            <div>{hint.wordEntity.target}</div>
-                                            <div>{hint.wordEntity.native}</div>
-                                            {hint.wordEntity.nativeAlt?.split(';').map(syn => <div>{syn}</div>)}
+                                        <div className={styles.questionToken} onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>
+                                            {questionWords && questionWords[index]}
+                                            {hint.wordEntity &&
+                                            <div className={cn(styles.hintContainer, {[styles.visible]: index === hintIndex})}>
+                                                <div>{hint.wordEntity.target}</div>
+                                                <div>{hint.wordEntity.native}</div>
+                                                {hint.wordEntity.nativeAlt?.split(';').map(syn => <div>{syn}</div>)}
+                                            </div>
+                                            }
                                         </div>
-                                        }
                                     </div>
                                 )
                             })}

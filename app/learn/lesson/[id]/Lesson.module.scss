@@ -96,6 +96,10 @@
     font-size: 1.2rem;
     display: flex;
     gap: 1ch;
+
+    .questionToken {
+        position: relative;
+    }
 }
 
 .hintContainer {
