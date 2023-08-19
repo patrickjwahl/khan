@@ -45,6 +45,19 @@ export async function POST(request: NextRequest, context: { params: {id: string}
         throw new Error("User not found!");
     }
 
+    const lesson = await prisma.lesson.findFirst({
+        where: {
+            id: lessonId,
+        },
+        include: {
+            module: true
+        }
+    });
+
+    if (!lesson) return NextResponse.json({code: 'NO_SUCH_LESSON'});
+
+    if (!lesson?.module.published) return NextResponse.json({code: 'OK'});
+
     const lastLessonDate = new Date(user.lastLesson || 'Thu Jan 01 1970');
     const now = new Date(date);
 
@@ -71,19 +84,6 @@ export async function POST(request: NextRequest, context: { params: {id: string}
             lastLesson: date
         }
     });
-
-    const lesson = await prisma.lesson.findFirst({
-        where: {
-            id: lessonId,
-        },
-        include: {
-            module: true
-        }
-    });
-
-    if (!lesson) return NextResponse.json({code: 'NO_SUCH_LESSON'});
-
-    if (!lesson?.module.published) return NextResponse.json({code: 'OK'});
 
     if (lessonId !== userCourse.lessonId || lesson.moduleId !== userCourse.moduleId) {
         // Not the user's current lesson, give them credit for trying

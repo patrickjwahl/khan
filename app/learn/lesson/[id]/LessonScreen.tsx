@@ -187,7 +187,7 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                             })}
                         </div>}
                     </div>
-                    <input disabled={correct || incorrect} id={state === 'visible' || state === 'hiding' ? 'main-input' : 'hidden-input'} type="text" placeholder='Type your answer' value={userInput} onChange={e => onUserInput(e.target.value)} />
+                    <input autoComplete='off' disabled={correct || incorrect} id={state === 'visible' || state === 'hiding' ? 'main-input' : 'hidden-input'} type="text" placeholder='Type your answer' value={userInput} onChange={e => onUserInput(e.target.value)} />
                     <div className={styles.border} style={{visibility: correct || incorrect ? 'visible': 'hidden'}}></div>
                     <div className={cn(styles.answerContainer, {[styles.visible]: correct || incorrect})}>
                         <div className={cn(styles.result, {[styles.wrong]: incorrect})}>{correct ? 'GREAT JOB!' : 'OOPS...'}</div>

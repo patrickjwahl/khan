@@ -92,7 +92,7 @@ export default async function Lesson({ params }: { params: { id: string }}) {
         throw new Error("You're not subscribed to this course!");
     }
 
-    if (!lesson.module.course.published) {
+    if (!lesson.module.course.published || !lesson.module.published) {
         mode = LessonMode.Preview;
     } else if (userCourse.currentLesson.module.index < lesson.module.index || (userCourse.moduleId === lesson.moduleId && userCourse.currentLesson.index < lesson.index)) {
         throw new Error("You haven't unlocked this lesson yet!");
