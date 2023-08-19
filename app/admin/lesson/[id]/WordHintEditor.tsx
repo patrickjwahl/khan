@@ -1,4 +1,4 @@
-import { MouseEventHandler, useState } from 'react';
+import { MouseEventHandler, useEffect, useState } from 'react';
 import styles from '../../Admin.module.scss';
 import { WordHint } from './LessonDashboard';
 import { FaArrowRight } from 'react-icons/fa';
@@ -30,6 +30,12 @@ export default function WordHintEditor({isForward, hint, setId, courseId}: {isFo
         setId(data.word.id);
         setTargetOverride(`${data.word.target} (${data.word.native})`);
     };
+
+    useEffect(() => {
+        setTargetOverride(null);
+        setError(false);
+        setRoot('');
+    }, [hint])
 
     return (
         <>

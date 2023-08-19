@@ -2,12 +2,19 @@ import { prisma } from "@/lib/db";
 import LessonContent from "./LessonContent";
 import { useUser, userCanEditCourse } from "@/lib/user";
 import { Prisma, Question, Word } from "@prisma/client";
-import { COMMENT_REGEX, SENTENCE_REGEX, VOCAB_WORD_REGEX } from "@/lib/settings";
+import { COMMENT_REGEX, MAX_QUESTIONS_PER_LESSON, SENTENCE_REGEX, VOCAB_WORD_REGEX } from "@/lib/settings";
 import '../../../vocab-word.scss';
 import { getAllVariants, getMainVariant } from "@/lib/string_processing";
+import { shuffleArray } from "@/lib/util";
 
 export type QuestionType = 'forward' | 'backward' | 'audio' | 'info';
 export type LessonQuestion = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHintsBackward: {include: {wordEntity: true}}, wordHintsForward: {include: {wordEntity: true}}}}> & {question: string | null, answers: string[], questionType: QuestionType, vocabWords: {[w: string]: Word}, vocabSentences: {[id: number]: Question}};
+
+enum LessonMode {
+    Preview,
+    FirstPass,
+    OtherPass
+}
 
 export default async function Lesson({ params }: { params: { id: string }}) {
 
@@ -29,6 +36,8 @@ export default async function Lesson({ params }: { params: { id: string }}) {
         }
     });
 
+    let mode: LessonMode;
+
     if (!lesson) {
         throw new Error("This lesson doesn't exist!");
     }
@@ -37,7 +46,7 @@ export default async function Lesson({ params }: { params: { id: string }}) {
         throw new Error("You're not allowed to see this!");
     }
 
-    const questions = await prisma.question.findMany({
+    let questions = await prisma.question.findMany({
         where: {
             lessonId: lessonId
         },
@@ -65,11 +74,52 @@ export default async function Lesson({ params }: { params: { id: string }}) {
         }
     });
 
-    const userCourse = user && await prisma.userCourse.findFirst({where: {userId: user.id, courseId: lesson.module.courseId}});
+    const userCourse = user && await prisma.userCourse.findFirst({
+        where: {
+            userId: user.id, 
+            courseId: lesson.module.courseId
+        },
+        include: {
+            currentLesson: {
+                include: {
+                    module: true
+                }
+            }
+        }
+    });
+
+    if (!userCourse) {
+        throw new Error("You're not subscribed to this course!");
+    }
+
+    if (!lesson.module.course.published) {
+        mode = LessonMode.Preview;
+    } else if (userCourse.currentLesson.module.index < lesson.module.index || (userCourse.moduleId === lesson.moduleId && userCourse.currentLesson.index < lesson.index)) {
+        throw new Error("You haven't unlocked this lesson yet!");
+    } else if (userCourse.currentLesson.id === lessonId && userCourse.lessonCompletions === 0) {
+        // This is the user's current lesson and they haven't completed it once yet
+        mode = LessonMode.FirstPass;
+    } else {
+        mode = LessonMode.OtherPass;
+    }
+
+    if (mode === LessonMode.FirstPass) {
+        // only take first pass questions and info screens, in order
+        questions = questions.filter(q => q.firstPass || q.type === 'INFO');
+    } else if (mode === LessonMode.OtherPass) {
+        // one or more passes, so remove info screens, shuffle remaining questions,
+        // and take a sampling of those
+        questions = questions.filter(q => q.type === 'QUESTION');
+        questions = shuffleArray(questions);
+        questions = questions.slice(0, MAX_QUESTIONS_PER_LESSON);
+    }
+    // otherwise, we're in preview mode, so show every screen in order
 
     const questionsWithTypePromises = questions.map(async (q): Promise<LessonQuestion> => {
 
         if (q.type === 'INFO') {
+
+            // process word and sentence embeddings if the question is an info screen
 
             const wordsToReplace = q.info ? Array.from(q.info.matchAll(VOCAB_WORD_REGEX)).map(i => i[1]) : [];
             const wordEntityPromises = wordsToReplace.map(async word => {
@@ -138,7 +188,11 @@ export default async function Lesson({ params }: { params: { id: string }}) {
 
         let possibleTypes: QuestionType[] = [];
         if (q.backwardEnabled) possibleTypes.push('backward');
-        if (q.forwardEnabled) possibleTypes.push('forward');
+        if (q.forwardEnabled) {
+            // Make forward translations more likely since they're more rewarding IMO
+            possibleTypes.push('forward');
+            possibleTypes.push('forward');
+        } 
         if (q.recording && q.recordingEnabled) possibleTypes.push('audio');
 
         const type = possibleTypes[Math.floor(Math.random() * possibleTypes.length)];

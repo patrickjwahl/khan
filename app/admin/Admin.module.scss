@@ -529,6 +529,7 @@
     top: 0;
     background-color: variables.$theme-blue;
     border-bottom: 2px solid white;
+    z-index: 500;
 
     &::before {
         content: '';

@@ -6,7 +6,7 @@ import { LessonQuestion } from './page';
 import { AiFillAudio, AiFillSound } from 'react-icons/ai';
 import { useEffect, useState } from 'react';
 import ReactDOMServer from 'react-dom/server';
-import { getMainVariant } from '@/lib/string_processing';
+import { getMainVariant, getSynonyms } from '@/lib/string_processing';
 
 export const playRecording = (recording: string | null) => {
 
@@ -43,14 +43,11 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                 const word = e.target.dataset.word?.toLowerCase();
                 let wordEntity;
                 if (word && (wordEntity = question.vocabWords[word])) {
-                    console.log(wordEntity.nativeAlt);
-                    console.log(wordEntity.nativeAlt?.split(';'));
-                    console.log(wordEntity.nativeAlt?.split(';').map(syn => `<div>${syn}</div>`) || '');
                     const htmlText = ` 
                         <div class="${styles.hintContainer} ${styles.visible}"> 
                             <div>${wordEntity.target}</div>
                             <div>${wordEntity.native}</div>
-                            ${(wordEntity.nativeAlt?.split(';').map(syn => `<div>${syn}</div>`) || []).join('\n')}
+                            ${(getSynonyms(wordEntity.nativeAlt).map(syn => `<div>${syn}</div>`) || []).join('\n')}
                         </div>
                         `
                     e.target.insertAdjacentHTML('beforeend', htmlText);
@@ -87,7 +84,7 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                 }
             }
         }
-    }, []);
+    }, [question]);
 
     // Show hint and play sound for sentences
     useEffect(() => {
@@ -135,7 +132,7 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                 }
             }
         }
-    });
+    }, [question]);
 
     return (
         <div className={cn(styles.screenContainer, {[styles.invisible]: state === 'invisible', [styles.hiding]: state === 'hiding', [styles.visible]: state === 'visible', [styles.appearing]: state === 'appearing'})}>
@@ -162,7 +159,7 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                                             <div className={cn(styles.hintContainer, {[styles.visible]: index === hintIndex})}>
                                                 <div>{hint.wordEntity.native}</div>
                                                 <div>{hint.wordEntity.target}</div>
-                                                {hint.wordEntity.targetAlt?.split(';').map(syn => <div>{syn}</div>)}
+                                                {getSynonyms(hint.wordEntity.targetAlt).map(syn => <div>{syn}</div>)}
                                             </div>
                                             }
                                         </div>
@@ -181,7 +178,7 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                                             <div className={cn(styles.hintContainer, {[styles.visible]: index === hintIndex})}>
                                                 <div>{hint.wordEntity.target}</div>
                                                 <div>{hint.wordEntity.native}</div>
-                                                {hint.wordEntity.nativeAlt?.split(';').map(syn => <div>{syn}</div>)}
+                                                {getSynonyms(hint.wordEntity.nativeAlt).map(syn => <div>{syn}</div>)}
                                             </div>
                                             }
                                         </div>

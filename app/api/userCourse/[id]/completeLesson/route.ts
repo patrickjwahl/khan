@@ -85,7 +85,7 @@ export async function POST(request: NextRequest, context: { params: {id: string}
 
     if (!lesson?.module.published) return NextResponse.json({code: 'OK'});
 
-    if (lessonId !== userCourse.lessonId || lesson.moduleId !== userCourse.moduleId ) {
+    if (lessonId !== userCourse.lessonId || lesson.moduleId !== userCourse.moduleId) {
         // Not the user's current lesson, give them credit for trying
         addExp(EXP_FOR_ALREADY_FINISHED_LESSON, date, userCourse.id);
         return NextResponse.json({code: 'OK'});

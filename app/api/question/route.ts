@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
      // Word hints for translating native to target
      if (nativeChanged && updatedQuestion.native) {
 
-        const newWords = updatedQuestion.native.split('\n')[0].replace(/[.,\/#!\?$%\^&\*;:{}=\-_`~()]/g,"").split(' ');
+        const newWords = getTokens(getMainVariant(updatedQuestion.native));
         let index = 0;
         for (const wordString of newWords) {
             const guessFromWordHints = await prisma.wordHint.findFirst({where: {forwardQuestion: {lesson: {module: {courseId: courseId}}}, wordString: {equals: wordString, mode: 'insensitive'}, wordEntityId: {not: null}}});
