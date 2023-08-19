@@ -313,7 +313,7 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
     };
 
     const handleWordHintBackwardChange = (index: number) => {
-        return (wordId: number) => {
+        return (wordId: number | null) => {
             const newHints = [...wordHintsBackward];
             newHints[index].wordEntityId = wordId;
             setWordHintsBackward(newHints);
@@ -321,7 +321,7 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
     };
 
     const handleWordHintForwardChange = (index: number) => {
-        return (wordId: number) => {
+        return (wordId: number | null) => {
             const newHints = [...wordHintsForward];
             newHints[index].wordEntityId = wordId;
             setWordHintsForward(newHints);

@@ -1,18 +1,25 @@
-import { MouseEventHandler, useEffect, useState } from 'react';
+import { MouseEventHandler, ReactNode, useEffect, useState } from 'react';
 import styles from '../../Admin.module.scss';
 import { WordHint } from './LessonDashboard';
 import { FaArrowRight } from 'react-icons/fa';
 import { post } from '@/lib/api';
 
 
-export default function WordHintEditor({isForward, hint, setId, courseId}: {isForward: boolean, hint: WordHint, setId: (id: number) => void, courseId: number}) {
+export default function WordHintEditor({isForward, hint, setId, courseId}: {isForward: boolean, hint: WordHint, setId: (id: number | null) => void, courseId: number}) {
 
     const [ root, setRoot ] = useState('');
     const [ error, setError ] = useState(false);
-    const [ targetOverride, setTargetOverride ] = useState<string | null>(null);
+    const [ targetOverride, setTargetOverride ] = useState<string | null | ReactNode>(null);
 
     const findWord: MouseEventHandler = async e => {
+
         e.preventDefault();
+
+        if (!root) {
+            setId(null);
+            setTargetOverride(<i>None</i>);
+            return;
+        }
 
         const payload = {
             word: root
