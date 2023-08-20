@@ -76,40 +76,43 @@ export async function POST(request: NextRequest,  context: { params: { id: strin
         if (!newQuestion.target || !newQuestion.native) return NextResponse.json({code: 'NULL_SENTENCE'});
 
         // backward translation hints
-        let newWords = getTokens(getMainVariant(newQuestion.target));
+        let tokens = getTokens(getMainVariant(newQuestion.target));
         let i = 0;
-        for (const wordString of newWords) {
-            const guessFromWordHints = await prisma.wordHint.findFirst({where: {backwardQuestion: {lesson: {module: {courseId: module.courseId}}}, wordString: {equals: wordString, mode: 'insensitive'}, wordEntityId: {not: null}}});
+        for (const token of tokens) {
+            const guessFromWordHints = await prisma.wordHint.findFirst({where: {backwardQuestion: {lesson: {module: {courseId: module.courseId}}}, wordString: {equals: token.token, mode: 'insensitive'}, wordEntityId: {not: null}}});
             if (guessFromWordHints) {
                 await prisma.wordHint.create({
                     data: {
-                        wordString: wordString.toLowerCase(),
+                        wordString: token.token,
                         backwardQuestionId: newQuestion.id,
                         wordEntityId: guessFromWordHints.wordEntityId,
-                        index: i
+                        index: i,
+                        noSpace: token.noSpace
                     }
                 })
             } else {
-                let guessFromWords = await prisma.word.findFirst({where: {module: { courseId: module.courseId}, target: {equals: wordString, mode: 'insensitive'}}});
+                let guessFromWords = await prisma.word.findFirst({where: {module: { courseId: module.courseId}, target: {equals: token.token, mode: 'insensitive'}}});
                 if (!guessFromWords) {
-                    guessFromWords = await prisma.word.findFirst({where: {module: { courseId: module.courseId}, targetAlt: {contains: wordString, mode: 'insensitive'}}});
+                    guessFromWords = await prisma.word.findFirst({where: {module: { courseId: module.courseId}, targetAlt: {contains: token.token, mode: 'insensitive'}}});
                 }
                 if (guessFromWords) {
                     await prisma.wordHint.create({
                         data: {
-                            wordString: wordString.toLowerCase(),
+                            wordString: token.token,
                             backwardQuestionId: newQuestion.id,
                             wordEntityId: guessFromWords.id,
-                            index: i
+                            index: i,
+                            noSpace: token.noSpace
                         }
                     });
                 } else {
                     await prisma.wordHint.create({
                         data: {
-                            wordString: wordString.toLowerCase(),
+                            wordString: token.token,
                             backwardQuestionId: newQuestion.id,
                             wordEntityId: null,
-                            index: i
+                            index: i,
+                            noSpace: token.noSpace
                         }
                     });
                 }
@@ -118,40 +121,43 @@ export async function POST(request: NextRequest,  context: { params: { id: strin
         }
 
         // forward translation hints
-        newWords = getTokens(getMainVariant(newQuestion.native));
+        tokens = getTokens(getMainVariant(newQuestion.native));
         i = 0;
-        for (const wordString of newWords) {
-            const guessFromWordHints = await prisma.wordHint.findFirst({where: {forwardQuestion: {lesson: {module: {courseId: module.courseId}}}, wordString: {equals: wordString, mode: 'insensitive'}, wordEntityId: {not: null}}});
+        for (const token of tokens) {
+            const guessFromWordHints = await prisma.wordHint.findFirst({where: {forwardQuestion: {lesson: {module: {courseId: module.courseId}}}, wordString: {equals: token.token, mode: 'insensitive'}, wordEntityId: {not: null}}});
             if (guessFromWordHints) {
                 await prisma.wordHint.create({
                     data: {
-                        wordString: wordString.toLowerCase(),
+                        wordString: token.token,
                         forwardQuestionId: newQuestion.id,
                         wordEntityId: guessFromWordHints.wordEntityId,
-                        index: i
+                        index: i,
+                        noSpace: token.noSpace
                     }
                 })
             } else {
-                let guessFromWords = await prisma.word.findFirst({where: {module: { courseId: module.courseId}, native: {equals: wordString, mode: 'insensitive'}}});
+                let guessFromWords = await prisma.word.findFirst({where: {module: { courseId: module.courseId}, native: {equals: token.token, mode: 'insensitive'}}});
                 if (!guessFromWords) {
-                    guessFromWords = await prisma.word.findFirst({where: {module: { courseId: module.courseId}, nativeAlt: {contains: wordString, mode: 'insensitive'}}});
+                    guessFromWords = await prisma.word.findFirst({where: {module: { courseId: module.courseId}, nativeAlt: {contains: token.token, mode: 'insensitive'}}});
                 }
                 if (guessFromWords) {
                     await prisma.wordHint.create({
                         data: {
-                            wordString: wordString.toLowerCase(),
+                            wordString: token.token,
                             forwardQuestionId: newQuestion.id,
                             wordEntityId: guessFromWords.id,
-                            index: i
+                            index: i,
+                            noSpace: token.noSpace
                         }
                     });
                 } else {
                     await prisma.wordHint.create({
                         data: {
-                            wordString: wordString.toLowerCase(),
+                            wordString: token.token,
                             forwardQuestionId: newQuestion.id,
                             wordEntityId: null,
-                            index: i
+                            index: i,
+                            noSpace: token.noSpace
                         }
                     });
                 }

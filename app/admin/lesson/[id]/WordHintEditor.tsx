@@ -2,6 +2,7 @@ import { MouseEventHandler, ReactNode, useEffect, useState } from 'react';
 import styles from '../../Admin.module.scss';
 import { WordHint } from './LessonDashboard';
 import { FaArrowRight } from 'react-icons/fa';
+import { AiOutlineSearch } from 'react-icons/ai';
 import { post } from '@/lib/api';
 
 
@@ -54,7 +55,7 @@ export default function WordHintEditor({isForward, hint, setId, courseId}: {isFo
             </div>
             <div style={{display: 'flex', gap: '0.8rem'}}>
                 <input style={{width: '100px'}} type="text" placeholder='Root word' value={root} onChange={e => {if (error) setError(false); setRoot(e.target.value)}}/>
-                <button style={{width: '50px'}} onClick={findWord}>Set</button>
+                <button title='Search' onClick={findWord}><AiOutlineSearch /></button>
             </div>
         </div>
         {error && <div>That word's not in this course.</div>}

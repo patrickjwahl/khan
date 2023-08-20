@@ -1,8 +1,14 @@
 const VARIANT_DELIMITER = '\n';
 const TOKEN_DELIMITER = ' ';
 const SYNONYM_DELIMITER = ';';
-const SYMBOLS_REGEX = /[.,\/#!\?$%\^&\*;:{}=\-_`~()]/g;
+const SYMBOLS_REGEX = /[.,\/#!\?$%\^&;:{}=\-_`~()]/g;
 const PUNCTUATION_REGEX = /[¿¡]/g;
+const INNER_TOKEN_DELIMITER = '*';
+
+export type WordHintToken = {
+    token: string;
+    noSpace: boolean;
+}
 
 export const getMainVariant = (variants: string | null): string => {
     if (!variants) return '';
@@ -28,12 +34,32 @@ export const stripSymbols = (value: string | null): string => {
     return value.replace(SYMBOLS_REGEX, "").replace(PUNCTUATION_REGEX, "");
 };
 
-export const getTokens = (sentence: string | null): string[] => {
+export const getTokens = (sentence: string | null): WordHintToken[] => {
     if (!sentence) return [];
 
-    return stripSymbols(sentence).split(TOKEN_DELIMITER);
+    const tokens = stripSymbols(sentence).split(TOKEN_DELIMITER);
+    return tokens.flatMap(token => {
+        const innerTokens = token.split(INNER_TOKEN_DELIMITER);
+        return innerTokens.map((innerToken, index) => ({
+            token: innerToken,
+            noSpace: index < innerTokens.length - 1
+        }));
+    });
+};
+
+export const getQuestionTokens = (sentence: string | null): string[] => {
+    if (!sentence) return [];
+
+    const tokens = sentence.split(TOKEN_DELIMITER);
+    return tokens.flatMap(token => token.split(INNER_TOKEN_DELIMITER));
 };
 
 export const normalizeAnswer = (answer: string): string => {
-    return stripSymbols(answer.trim()).toLowerCase();
+    return stripInnerDelimiter(stripSymbols(answer.trim())).toLowerCase();
+};
+
+export const stripInnerDelimiter = (sentence: string | null): string => {
+    if (!sentence) return '';
+
+    return sentence.replaceAll(INNER_TOKEN_DELIMITER, '');
 };

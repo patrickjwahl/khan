@@ -23,7 +23,7 @@ import InfoEditor from "./InfoEditor";
 import Breadcrumbs, { Breadcrumb } from "../../Breadcrumbs";
 import WordHintEditor from "./WordHintEditor";
 import Link from "next/link";
-import { getMainVariant } from "@/lib/string_processing";
+import { getMainVariant, stripInnerDelimiter } from "@/lib/string_processing";
 
 type LessonWithEverything = Prisma.LessonGetPayload<{include: { module: { include: { course: true, questions: true }}, questions: {include: { feedbackRules: true, wordHintsBackward: {include: {wordEntity: true}}, wordHintsForward: {include: {wordEntity: true}} }}}}>;
 type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHintsBackward: {include: {wordEntity: true}}, wordHintsForward: {include: {wordEntity: true}}}}>;
@@ -644,8 +644,8 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
                                         <td>{typeToIcon(q.type)}</td>
                                         <td>{q.firstPass ? '1' : '2'}</td>
                                         <td>{q.type !== 'QUESTION' ? (null) : !q.recording ? <HiExclamationCircle style={{color: variables.themeRed, fontSize: '1.2rem'}} /> : <button onClick={e => {e.stopPropagation(); playTableRecording(q)}} className={styles.iconButton}><FaCheckCircle style={{color: variables.themeGreen}} /></button>}</td>
-                                        <td style={{fontWeight: q.type === 'INFO' ? 'bold' : 'normal'}}>{getMainVariant(q.target) || q.infoTitle}</td>
-                                        <td>{getMainVariant(q.native)}</td>
+                                        <td style={{fontWeight: q.type === 'INFO' ? 'bold' : 'normal'}}>{stripInnerDelimiter(getMainVariant(q.target)) || q.infoTitle}</td>
+                                        <td>{stripInnerDelimiter(getMainVariant(q.native))}</td>
                                         <td>{!q.notes ? (null) : <button onClick={e => notesClicked(q, e)} className={styles.iconButton}><GiNotebook /></button>}</td>
                                         <td><button onClick={e => {e.stopPropagation(); decreaseIndex(index)}} className={styles.iconButton}><FaArrowCircleUp /></button></td>
                                         <td><button onClick={e => {e.stopPropagation(); increaseIndex(index)}} className={styles.iconButton}><FaArrowCircleDown /></button></td>

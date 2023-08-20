@@ -6,7 +6,7 @@ import { LessonQuestion } from './page';
 import { AiFillAudio, AiFillSound } from 'react-icons/ai';
 import { useEffect, useState } from 'react';
 import ReactDOMServer from 'react-dom/server';
-import { getMainVariant, getSynonyms } from '@/lib/string_processing';
+import { getMainVariant, getQuestionTokens, getSynonyms, stripInnerDelimiter } from '@/lib/string_processing';
 
 export const playRecording = (recording: string | null) => {
 
@@ -22,7 +22,7 @@ export const playRecording = (recording: string | null) => {
 
 export default function LessonScreen({ question, userInput, onUserInput, state, language, correct, incorrect, feedback}: { question: LessonQuestion, userInput: string, onUserInput: (value: string) => void, state: ScreenState, language: string, correct?: boolean, incorrect?: boolean, feedback?: string}) {
 
-    const questionWords = question.question?.split(' ');
+    const questionWords = getQuestionTokens(question.question);
     const [ hintIndex, setHintIndex ] = useState(-1);
     const [ audioPlayed, setAudioPlayed ] = useState(false);
 
@@ -153,7 +153,7 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                             {question.wordHintsForward.map((hint, index) => {
                                 return (
                                     <div key={index}>
-                                        <div className={styles.questionToken} onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>
+                                        <div className={cn(styles.questionToken, {[styles.noSpace]: hint.noSpace})} onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>
                                             {questionWords && questionWords[index]}
                                             {hint.wordEntity &&
                                             <div className={cn(styles.hintContainer, {[styles.visible]: index === hintIndex})}>
@@ -172,7 +172,7 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                             {question.wordHintsBackward.map((hint, index) => {
                                 return (
                                     <div key={index}>
-                                        <div className={styles.questionToken} onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>
+                                        <div className={cn(styles.questionToken, {[styles.noSpace]: hint.noSpace})} onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>
                                             {questionWords && questionWords[index]}
                                             {hint.wordEntity &&
                                             <div className={cn(styles.hintContainer, {[styles.visible]: index === hintIndex})}>
@@ -191,7 +191,7 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                     <div className={styles.border} style={{visibility: correct || incorrect ? 'visible': 'hidden'}}></div>
                     <div className={cn(styles.answerContainer, {[styles.visible]: correct || incorrect})}>
                         <div className={cn(styles.result, {[styles.wrong]: incorrect})}>{correct ? 'GREAT JOB!' : 'OOPS...'}</div>
-                        <div className={styles.answer}>"{question.question}" {question.questionType === 'forward' ? 'translates to' : 'means'} "{question.answers[0]}"</div>
+                        <div className={styles.answer}>"{question.question}" {question.questionType === 'forward' ? 'translates to' : 'means'} "{stripInnerDelimiter(question.answers[0])}"</div>
                         {feedback && <div className={styles.answer}><b>{feedback}</b></div>}
                     </div>
                 </div>

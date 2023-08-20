@@ -89,6 +89,7 @@ model WordHint {
     wordEntity         Word?     @relation(fields: [wordEntityId], references: [id], onDelete: SetNull)
     wordEntityId       Int?
     index              Int?
+    noSpace            Boolean   @default(false)
 
     @@map("word_hints")
 }
