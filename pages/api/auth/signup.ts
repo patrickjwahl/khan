@@ -74,7 +74,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     const hashedPassword = await argon2.hash(password);
     const user = await prisma.user.create({data: {
-        email, password: hashedPassword, username
+        email, password: hashedPassword, username, canEdit: true
     }});
 
     req.session.user = {email: user.email, username: user.username, id: user.id, canEdit: user.canEdit, isLoggedIn: true};
