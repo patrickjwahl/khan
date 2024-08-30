@@ -12,7 +12,7 @@ import Breadcrumbs, { Breadcrumb } from "../../Breadcrumbs";
 import { AiFillSound } from "react-icons/ai";
 import Link from "next/link";
 import { FaArrowCircleDown, FaArrowCircleUp, FaSkullCrossbones } from "react-icons/fa";
-import { useS3Upload } from 'next-s3-upload';
+import { useS3Upload, sanitizeKey } from 'next-s3-upload';
 import Image from "next/image";
 import { BsBroadcastPin, BsEyeFill } from "react-icons/bs";
 import { User } from "@/lib/user";
@@ -21,9 +21,6 @@ import { User as PrismaUser } from '@prisma/client';
 type CourseWithModules = Prisma.CourseGetPayload<{include: { owner: true, editors: true, modules: { include: {lessons: true }}}}>;
 
 export default function CourseDashboard({ course, badQuestionsPerModule, user }: { course: CourseWithModules, badQuestionsPerModule: {[id: number]: number}, user: User}) {
-
-    console.log('UF');
-    console.log(user);
 
     const [ modalVisible, setModalVisible ] = useState(false);
     const [ title, setTitle ] = useState('');
@@ -221,9 +218,9 @@ export default function CourseDashboard({ course, badQuestionsPerModule, user }:
     };
 
     const uploadImage = async (file: File) => {
-        const { url } = await uploadToS3(file);
+        await uploadToS3(file);
         const payload = {
-            image: file.name
+            image: sanitizeKey(file.name)
         };
 
         const res = await fetch(`/api/course/${course.id}`, {
@@ -335,7 +332,7 @@ export default function CourseDashboard({ course, badQuestionsPerModule, user }:
                             <col />
                             <col />
                             <col />
-                            <col />
+                            <col style={{width: '10%'}} />
                             <col />
                             <col />
                             <col style={{width: '5%'}} />
@@ -347,7 +344,7 @@ export default function CourseDashboard({ course, badQuestionsPerModule, user }:
                             <th></th>
                             <th>Title</th>
                             <th>Lessons</th>
-                            <th><AiFillSound /> !</th>
+                            <th><AiFillSound />!</th>
                             <th>Checkpoint</th>
                             <th>Published</th>
                             <th></th>

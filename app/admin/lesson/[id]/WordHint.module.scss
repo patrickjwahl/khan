@@ -1,0 +1,33 @@
+@use "../../../variables.module";
+
+.container {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    background-color: rgba(variables.$background-color, 0.25);
+    padding: 0.4rem;
+    border-radius: 5px;
+
+    div {
+        display: flex;
+        gap: 0.8rem;
+    }
+
+    input[type=text] {
+        width: 100px;
+    }
+}
+
+.buttonContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem !important;
+
+    button {
+        padding: 0 0.4rem;
+        border-radius: 3px;
+        flex-grow: 1;
+    }
+}

@@ -61,8 +61,6 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
     const [ selectedQuestion, setSelectedQuestion ] = useState(-1);
 
     const [ isSubmitting, setIsSubmitting ] = useState(false);
-    
-    const [ unsavedChanges, setUnsavedChanges ] = useState(false);
 
     const [ audioRecording, setAudioRecording ] = useState(false);
 
@@ -101,9 +99,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
         topRef.current && topRef.current.focus();
     }
 
-    const submitClicked: FormEventHandler<HTMLFormElement> = async e => {
-        e.preventDefault();
-
+    const submitData = async () => {
         if (!native && !infoTitle) return;
 
         setIsSubmitting(true);
@@ -176,9 +172,11 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
         addToast(questionId ? 'Screen updated' : 'Screen added');
         fetchData();
         setIsSubmitting(false);
-        // newQuestion();
+    }
 
-        // toggleModal();
+    const submitClicked: MouseEventHandler = async e => {
+        e.preventDefault();
+        submitData();
     };
 
     const editRow = async (question: QuestionWithFeedback) => {
@@ -275,6 +273,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
             const newHints = [...wordHintsForward];
             newHints[index].wordEntityId = wordId;
             setWordHintsForward(newHints);
+            submitData();
         }
     };
 
@@ -283,6 +282,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
             const newHints = [...wordHintsBackward];
             newHints[index].wordEntityId = wordId;
             setWordHintsBackward(newHints);
+            submitData();
         }
     };
 
@@ -348,34 +348,14 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
 
             <div className={styles.formSectionHeader}>WORD HINTS (BACKWARD)</div>
             {wordHintsBackward.map((hint, index) => {
-                return <WordHintEditor isForward={false} hint={hint} setId={handleWordHintBackwardChange(index)} courseId={module.courseId} />
+                return <WordHintEditor isForward={false} hint={hint} prevHint={(index > 0 && wordHintsBackward[index - 1]) || null} setId={handleWordHintBackwardChange(index)} courseId={module.courseId} />
             })}
-            {wordHintsBackward.length > 0 && <div style={{fontStyle: 'italic', fontSize: '0.8rem'}}>Press the UPDATE button above to submit changes to word hints!</div>}
 
             <div className={styles.formSectionHeader}>WORD HINTS (FORWARD)</div>
             {wordHintsForward.map((hint, index) => {
-                return <WordHintEditor isForward hint={hint} setId={handleWordHintForwardChange(index)} courseId={module.courseId} />
+                return <WordHintEditor isForward hint={hint} prevHint={(index > 0 && wordHintsForward[index - 1]) || null} setId={handleWordHintForwardChange(index)} courseId={module.courseId} />
             })}
-            {wordHintsForward.length > 0 && <div style={{fontStyle: 'italic', fontSize: '0.8rem'}}>Press the UPDATE button above to submit changes to word hints!</div>}
 
-            {feedbackRulesForm}
-            {notesForm}
-        </>
-    );
-    const audioForm = (
-        <>
-            <div className={styles.formSectionHeader}>RECORD AUDIO</div>
-            <div className={styles.audioButtonsContainer}>
-                {audioRecording ? <button onClick={stopRecording} className={styles.stopButton}><FaStop /></button> 
-                : <button onClick={startRecording} className={styles.recordButton}><BsRecordCircleFill /></button>}
-                {!audioRecording && audioBlob != null ? <button onClick={playAudio} className={styles.stopButton}><BsFillPlayCircleFill /></button> : (null)}
-            </div>
-            <div className={styles.formSectionHeader}>POSSIBLE ANSWERS</div>
-            <textarea placeholder="Answers (place each answer on a new line)" value={native} onChange={e => setNative(e.target.value)} />
-            <label>
-                Second pass only?
-                <input style={{marginLeft: '0.4rem'}} type="checkbox" checked={!firstPass} onChange={e => setFirstPass(!e.target.checked)} />
-            </label>
             {feedbackRulesForm}
             {notesForm}
         </>
@@ -465,12 +445,12 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
                 </div>
                 <div className={styles.editor}>
                     <div>
-                        <form onSubmit={submitClicked}>
+                        <form onSubmit={e => {e.preventDefault(); return false}}>
                             <div className={styles.formTopRow}>
                                 <h5>SCREEN EDITOR</h5>
                                 <div>
                                     {questionId ? <button onClick={newQuestion}>CREATE NEW</button> : (null)}
-                                    {!isSubmitting ? <input type="submit" value={!questionId ? "CREATE" : "UPDATE"} /> : 
+                                    {!isSubmitting ? <input type="submit" onClick={submitClicked} value={!questionId ? "CREATE" : "UPDATE"} /> : 
                                     <ClipLoader color={variables.themeRed} loading={true} />}
                                 </div>
                             </div>

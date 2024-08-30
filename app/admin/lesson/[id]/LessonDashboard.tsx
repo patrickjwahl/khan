@@ -188,9 +188,7 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
         notesRef.current.style.display = 'none';
     }
 
-    const submitClicked: FormEventHandler<HTMLFormElement> = async e => {
-        e.preventDefault();
-
+    const submitData = async () => {
         if (type === 'QUESTION' && (!native || !target)) return;
         if (type === 'INFO' && !infoTitle) return;
 
@@ -264,8 +262,11 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
         fetchData();
         setIsSubmitting(false);
         newQuestion();
+    }
 
-        // toggleModal();
+    const submitClicked: FormEventHandler<HTMLFormElement> = async e => {
+        e.preventDefault();
+        submitData();
     };
 
     const editRow = async (question: QuestionWithFeedback) => {
@@ -317,6 +318,7 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
             const newHints = [...wordHintsBackward];
             newHints[index].wordEntityId = wordId;
             setWordHintsBackward(newHints);
+            submitData();
         }
     };
 
@@ -325,6 +327,7 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
             const newHints = [...wordHintsForward];
             newHints[index].wordEntityId = wordId;
             setWordHintsForward(newHints);
+            submitData();
         }
     };
 
@@ -540,15 +543,13 @@ export default function LessonDashboard({ initLesson, prevId, nextId }: { initLe
             
             <div className={styles.formSectionHeader}>WORD HINTS (BACKWARD)</div>
             {wordHintsBackward.map((hint, index) => {
-                return <WordHintEditor isForward={false} hint={hint} setId={handleWordHintBackwardChange(index)} courseId={lesson.module.courseId} />
+                return <WordHintEditor isForward={false} hint={hint} prevHint={(index > 0 && wordHintsBackward[index - 1]) || null} setId={handleWordHintBackwardChange(index)} courseId={lesson.module.courseId} />
             })}
-            {wordHintsBackward.length > 0 && <div style={{fontStyle: 'italic', fontSize: '0.8rem'}}>Press the UPDATE button above to submit changes to word hints!</div>}
 
             <div className={styles.formSectionHeader}>WORD HINTS (FORWARD)</div>
             {wordHintsForward.map((hint, index) => {
-                return <WordHintEditor isForward hint={hint} setId={handleWordHintForwardChange(index)} courseId={lesson.module.courseId} />
+                return <WordHintEditor isForward hint={hint} prevHint={(index > 0 && wordHintsForward[index - 1]) || null} setId={handleWordHintForwardChange(index)} courseId={lesson.module.courseId} />
             })}
-            {wordHintsForward.length > 0 && <div style={{fontStyle: 'italic', fontSize: '0.8rem'}}>Press the UPDATE button above to submit changes to word hints!</div>}
 
             {feedbackRulesForm}
             {notesForm}
