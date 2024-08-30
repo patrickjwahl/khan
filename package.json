@@ -27,10 +27,12 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-icons": "^4.8.0",
+    "react-simple-keyboard": "^3.7.147",
     "react-spinners": "^0.13.8",
     "react-xarrows": "^2.0.2",
     "recharts": "^2.5.0",
     "sass": "^1.59.3",
+    "simple-keyboard-layouts": "^3.4.18",
     "swr": "^2.1.0",
     "use-sound": "^4.0.1"
   },

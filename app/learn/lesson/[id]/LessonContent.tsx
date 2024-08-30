@@ -164,8 +164,8 @@ export default function LessonContent({ lesson, questions, userCourse, numLesson
                 <ProgressBar customLabel={`${numCorrect}/${numQuestions}`} completed={Math.floor(numCorrect * 100 / numQuestions)} baseBgColor={variables.darkbackground} bgColor={variables.orange} labelClassName={styles.progressBarLabel} />
             </div>
             <div className={styles.lessonMain}>
-                <LessonScreen language={lesson.module.course.language} question={screens[currentQuestion]} userInput={userInput} state={transitioning ? 'hiding' : 'visible'} onUserInput={setUserInput} correct={correct} incorrect={incorrect} feedback={feedback} />
-                {screens[currentQuestion + 1] && <LessonScreen language={lesson.module.course.language} question={screens[currentQuestion + 1]} userInput={userInput} onUserInput={setUserInput} state={transitioning ? 'appearing' : 'invisible'} />}
+                <LessonScreen language={lesson.module.course.language} question={screens[currentQuestion]} userInput={userInput} state={transitioning ? 'hiding' : 'visible'} onUserInput={setUserInput} onUserSubmit={handleButtonClick} correct={correct} incorrect={incorrect} feedback={feedback} />
+                {screens[currentQuestion + 1] && <LessonScreen language={lesson.module.course.language} question={screens[currentQuestion + 1]} userInput={userInput} onUserInput={setUserInput} onUserSubmit={handleButtonClick} state={transitioning ? 'appearing' : 'invisible'} />}
             </div>
             <div className={styles.lessonBottomBar}>
                 <button onClick={handleIncorrect} style={{visibility: incorrect || correct || screens[currentQuestion].type === 'INFO' ? 'hidden' : 'visible'}} className="orange">SKIP</button>

@@ -5,8 +5,10 @@ import cn from 'classnames';
 import { LessonQuestion } from './page';
 import { AiFillAudio, AiFillSound } from 'react-icons/ai';
 import { useEffect, useState } from 'react';
-import ReactDOMServer from 'react-dom/server';
 import { getMainVariant, getQuestionTokens, getSynonyms, stripInnerDelimiter } from '@/lib/string_processing';
+import Keyboard from 'react-simple-keyboard';
+import 'react-simple-keyboard/build/css/index.css';
+import keyboardLayoutLib from '@/lib/keyboards/mongolian'
 
 export const playRecording = (recording: string | null) => {
 
@@ -20,11 +22,13 @@ export const playRecording = (recording: string | null) => {
 };
 
 
-export default function LessonScreen({ question, userInput, onUserInput, state, language, correct, incorrect, feedback}: { question: LessonQuestion, userInput: string, onUserInput: (value: string) => void, state: ScreenState, language: string, correct?: boolean, incorrect?: boolean, feedback?: string}) {
+export default function LessonScreen({ question, userInput, onUserInput, onUserSubmit, state, language, correct, incorrect, feedback}: { question: LessonQuestion, userInput: string, onUserInput: (value: string) => void, onUserSubmit: () => void, state: ScreenState, language: string, correct?: boolean, incorrect?: boolean, feedback?: string}) {
 
     const questionWords = getQuestionTokens(question.question);
     const [ hintIndex, setHintIndex ] = useState(-1);
     const [ audioPlayed, setAudioPlayed ] = useState(false);
+    const [ keyboardLayout, setKeyboardLayout ] = useState<'default' | 'shift'>('default');
+    const [ isKeyboardLocked, setKeyboardLocked ] = useState<boolean>(false);
 
     useEffect(() => {
         if (state === 'visible' && question.recording && question.questionType !== 'forward' && !audioPlayed) {
@@ -134,6 +138,35 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
         }
     }, [question]);
 
+    const keyboardPressed = (input: string) => {
+        if (correct || incorrect) return;
+
+        if (input == '{bksp}') {
+            userInput.length > 0 && onUserInput(userInput.substring(0, userInput.length - 1));
+        } else if (input == '{shift}') {
+            if (!isKeyboardLocked) {
+                setKeyboardLayout(keyboardLayout == 'shift' ? 'default' : 'shift');
+            }
+        } else if (input == '{space}') {
+            onUserInput(userInput + ' ');
+        } else if (input == '{lock}') {
+            if (isKeyboardLocked) {
+                setKeyboardLayout('default');
+                setKeyboardLocked(false);
+            } else {
+                setKeyboardLayout('shift');
+                setKeyboardLocked(true);
+            }
+        } else if (input == '{enter}') {
+            onUserSubmit();
+        } else {
+            onUserInput(userInput + input);
+            if (!isKeyboardLocked && keyboardLayout == 'shift') {
+                setKeyboardLayout('default');
+            }
+        }
+    }
+
     return (
         <div className={cn(styles.screenContainer, {[styles.invisible]: state === 'invisible', [styles.hiding]: state === 'hiding', [styles.visible]: state === 'visible', [styles.appearing]: state === 'appearing'})}>
             <div className={styles.screenContent}>
@@ -194,6 +227,7 @@ export default function LessonScreen({ question, userInput, onUserInput, state, 
                         <div className={styles.answer}>"{question.question}" {question.questionType === 'forward' ? 'translates to' : 'means'} "{stripInnerDelimiter(question.answers[0])}"</div>
                         {feedback && <div className={styles.answer}><b>{feedback}</b></div>}
                     </div>
+                    <Keyboard onKeyPress={keyboardPressed} layout={keyboardLayoutLib.layout} layoutName={keyboardLayout} />
                 </div>
             )}
             </div>

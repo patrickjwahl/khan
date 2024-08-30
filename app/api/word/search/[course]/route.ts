@@ -5,7 +5,7 @@ export async function POST(request: NextRequest, context: {params: {course: stri
 
     const courseId = parseInt(context.params.course);
     const requestData = await request.json();
-    const word = requestData.word;
+    const word = requestData.word.toLowerCase();
 
     let wordEntity = await prisma.word.findFirst({where: {target: word, module: {courseId: courseId}}});
 
