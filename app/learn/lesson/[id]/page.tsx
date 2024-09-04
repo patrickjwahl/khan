@@ -16,6 +16,11 @@ enum LessonMode {
     OtherPass
 }
 
+export async function generateMetadata({ params }: {params: {id: string}}) {
+    const course = await prisma.course.findFirst({where: {id: parseInt(params.id)}});
+    return {title: `Lesson | Genghis Khan Academy`};
+}
+
 export default async function Lesson({ params }: { params: { id: string }}) {
 
     const lessonId = parseInt(params.id);

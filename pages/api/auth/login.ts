@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/db";
 import { sessionOptions } from "@/lib/session";
-import { PrismaClient } from "@prisma/client";
 import argon2 from "argon2";
 import { withIronSessionApiRoute } from "iron-session/next";
 import { NextApiRequest, NextApiResponse } from "next";
@@ -21,9 +20,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     const { username, password } = req.body;
     const emailUser = await prisma.user.findFirst({where: {email: username}});
-    const passwordUser = await prisma.user.findFirst({where: {username: username}});
+    const unameUser = await prisma.user.findFirst({where: {username: username}});
 
-    const user = emailUser || passwordUser;
+    const user = emailUser || unameUser;
 
     if (!user) {
         return res.json({'code': 'NO_USER_EXISTS'});

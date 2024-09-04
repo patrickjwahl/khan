@@ -186,7 +186,7 @@ export default function LessonScreen({ question, userInput, onUserInput, onUserS
                             {question.wordHintsForward.map((hint, index) => {
                                 return (
                                     <div key={index}>
-                                        <div className={cn(styles.questionToken, {[styles.noSpace]: hint.noSpace})} onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>
+                                        <div data-testid='questionword' className={cn(styles.questionToken, {[styles.noSpace]: hint.noSpace})} onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>
                                             {questionWords && questionWords[index]}
                                             {hint.wordEntity &&
                                             <div className={cn(styles.hintContainer, {[styles.visible]: index === hintIndex})}>
@@ -205,7 +205,7 @@ export default function LessonScreen({ question, userInput, onUserInput, onUserS
                             {question.wordHintsBackward.map((hint, index) => {
                                 return (
                                     <div key={index}>
-                                        <div className={cn(styles.questionToken, {[styles.noSpace]: hint.noSpace})} onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>
+                                        <div data-testid='questionword' className={cn(styles.questionToken, {[styles.noSpace]: hint.noSpace})} onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>
                                             {questionWords && questionWords[index]}
                                             {hint.wordEntity &&
                                             <div className={cn(styles.hintContainer, {[styles.visible]: index === hintIndex})}>
@@ -223,7 +223,7 @@ export default function LessonScreen({ question, userInput, onUserInput, onUserS
                     <input autoComplete='off' disabled={correct || incorrect} id={state === 'visible' || state === 'hiding' ? 'main-input' : 'hidden-input'} type="text" placeholder='Type your answer' value={userInput} onChange={e => onUserInput(e.target.value)} />
                     <div className={styles.border} style={{visibility: correct || incorrect ? 'visible': 'hidden'}}></div>
                     <div className={cn(styles.answerContainer, {[styles.visible]: correct || incorrect})}>
-                        <div className={cn(styles.result, {[styles.wrong]: incorrect})}>{correct ? 'GREAT JOB!' : 'OOPS...'}</div>
+                        <div data-testid="result" className={cn(styles.result, {[styles.wrong]: incorrect})}>{correct ? 'GREAT JOB!' : 'OOPS...'}</div>
                         <div className={styles.answer}>"{question.question}" {question.questionType === 'forward' ? 'translates to' : 'means'} "{stripInnerDelimiter(question.answers[0])}"</div>
                         {feedback && <div className={styles.answer}><b>{feedback}</b></div>}
                     </div>

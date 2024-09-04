@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "dotenv -e .env.local -- next dev",
+    "migrate": "dotenv -e .env.local -- npx prisma migrate dev",
+    "test:e2e": "bash ./scripts/e2e.sh",
     "build": "next build",
     "start": "next start",
+    "build:test": "NODE_ENV=test next build",
+    "start:test": "NODE_ENV=test next start -p 3001",
     "lint": "next lint",
     "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "prisma:generate": "prisma generate"
@@ -37,6 +41,7 @@
     "use-sound": "^4.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.46.1",
     "@types/node": "^18.15.5",
     "file-loader": "^6.2.0",
     "prisma": "^4.11.0",

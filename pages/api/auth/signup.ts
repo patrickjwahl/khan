@@ -77,7 +77,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         email, password: hashedPassword, username, canEdit: true
     }});
 
-    req.session.user = {email: user.email, username: user.username, id: user.id, canEdit: user.canEdit, isLoggedIn: true};
+    req.session.user = {
+        email: user.email,
+        username: user.username, 
+        id: user.id, 
+        canEdit: user.canEdit, 
+        isLoggedIn: true
+    };
+    
     await req.session.save();
 
     return res.status(200).json({code: 'OK'});

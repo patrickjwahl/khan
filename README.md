@@ -4,7 +4,7 @@ After cloning the project and running `npm install`, set up your database. You s
 ```sql
 CREATE DATABASE khan;
 ```
-Now create a `.env` file in the project's root directory and add
+Now create a `.env.local` file in the project's root directory and add
 
 ```
 DATABASE_URL="postgresql://<user>:<password>@<domain>:<port>/khan"
@@ -15,19 +15,22 @@ Now, from the root directory run `npx prisma migrate dev --name my_first_migrati
 
 ### Environment variables
 
-Create a `.env.local` file and add the line
+Create a `.env` file and add the line
 ```
 SECRET_COOKIE_PASSWORD="reallyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyylongpassword"
 ```
 where the value is a password of at least 32 characters.
 
-If you plan to work on the admin features, go to [tiny.cloud](tiny.cloud) and create a free account. Under your account page's Cloud Dashboard, scroll to the bottom and copy your Tiny API Key. Add this key to your `.env.local`:
+If you plan to work on the admin features, go to [tiny.cloud](tiny.cloud) and create a free account. Under your account page's Cloud Dashboard, scroll to the bottom and copy your Tiny API Key. Add this key to your `.env`:
 
 ```
 NEXT_PUBLIC_TINY_API_KEY=<your_key_here>
 ```
 
 At this point you should be ready to run `npm run dev` and fire up your local server. 
+
+### Integration tests
+Integration/end-to-end tests use Playwright and currently run locally, spinning up a clean-slate Postgres database using Docker. First, make sure you have an up-to-date version of Docker installed on your system. Then use `npm run test:e2e` to run the tests.
 
 ### Storing images
 If you want to store and serve images in your development environment, set up an AWS S3 bucket. 
@@ -59,7 +62,7 @@ Continue on and give the policy a name, then create it. Close the tab and you'll
 
 Now go to the user's Security Credentials tab. Under "Access Keys" click "Create access key". Choose "Application running outside AWS", then move and create the key. *DON'T LEAVE THE NEXT PAGE UNTIL YOU'VE COPIED THE VALUES!*
 
-In your `.env.local` file add the lines:
+In your `.env` file add the lines:
 
 ```
 S3_UPLOAD_KEY=<key_name>
@@ -70,7 +73,7 @@ pasting as values the credentials you just created.
 #### The Bucket
 Go to S3 now. Create a bucket and call it whatever you want, keeping the default settings. 
 
-In your `.env.local` file copy:
+In your `.env` file copy:
 
 ```
 S3_UPLOAD_BUCKET=<your_bucket_name>
@@ -86,7 +89,7 @@ Now go to the CloudFront console and click Create Distribution.
 5. You should get a link to update the S3 bucket policy. Copy the JSON that's provided to you and paste it into the bucket policy for your bucket.
 6. Go to your CloudFront distribution and copy the distribution domain name.
 
-Paste the domain name in `.env.local`:
+Paste the domain name in `.env`:
 ```
 NEXT_PUBLIC_CLOUDFRONT_DOMAIN=https://your_id.cloudfront.net
 ```
