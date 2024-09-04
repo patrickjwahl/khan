@@ -19,8 +19,8 @@ export default function Page() {
                 </div>
             </div>
             <div className={styles.buttonContainer}>
-                <Link href='/auth/signup'><button>CREATE AN ACCOUNT</button></Link>
-                <Link href='/learn/course/12'><button className="orange">START LEARNING MONGOLIAN</button></Link>
+                <a href='/auth/signup'><button>CREATE AN ACCOUNT</button></a>
+                <a href='/learn/course/12'><button className="orange">START LEARNING MONGOLIAN</button></a>
             </div>
         </main>
     );

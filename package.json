@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "dotenv -e .env.local -- next dev",
-    "migrate": "dotenv -e .env.local -- npx prisma migrate dev",
+    "dev": "next dev",
+    "migrate": "npx prisma migrate dev",
     "test:e2e": "bash ./scripts/e2e.sh",
     "build": "next build",
     "start": "next start",
