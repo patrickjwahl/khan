@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-
 export const shuffleArray = <T> (input: T[]): T[] => {
     const array = [...input];
     for (let i = array.length - 1; i > 0; i--) {
@@ -9,12 +7,4 @@ export const shuffleArray = <T> (input: T[]): T[] => {
         array[j] = temp;
     }
     return array;
-}
-
-export const redirectOnMobile = (url: string) => {
-    useEffect(() => {
-        if (window.innerWidth <= 800) {
-            window.location.replace(url)
-        }
-    }, [])
 }

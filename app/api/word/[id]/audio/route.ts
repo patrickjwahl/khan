@@ -22,7 +22,7 @@ export async function POST(request: NextRequest, context: { params: {id: string}
         return NextResponse.json({'code': 'UNAUTHORIZED'});
     }
 
-    await prisma.question.update({where: {id: word}, data: {recording: requestData.recording}});
+    await prisma.question.update({where: {id: wordId}, data: {recording: requestData.recording}});
 
     return NextResponse.json({code: 'OK'});
 }
