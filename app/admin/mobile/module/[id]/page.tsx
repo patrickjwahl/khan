@@ -43,5 +43,5 @@ export default async function Module({ params }: { params: { id: string }}) {
         }
     });
 
-    return <ModuleMobileDashboard initQuestions={moduleQuestions} initWords={moduleWords} moduleTitle={module.title} />
+    return <ModuleMobileDashboard initQuestions={moduleQuestions} initWords={moduleWords} module={module} />
 }
