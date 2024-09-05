@@ -1,0 +1,129 @@
+@use "../../variables.module";
+
+.container {
+    width: 100%;
+    padding: 1.8rem;
+    text-align: center;
+
+    h1 {
+        font-size: xx-large;
+        margin-bottom: 0.4rem;
+    }
+
+    p {
+        font-size: small;
+    }
+
+    ul {
+        list-style-type: none;
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+        overflow-y: scroll;
+
+        li {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 0.8rem;
+            background-color: variables.$theme-blue;
+            padding: 0.8rem;
+            border-radius: 0.4rem;
+            border: 2px solid variables.$foreground-color;
+            color: variables.$background-color;
+
+            > div {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                justify-content: center;
+
+                p {
+                    font-style: italic;
+                    margin-bottom: 0;
+                }
+            }
+        }
+    }
+}
+
+.imageContainer {
+    width: 80px;
+    height: 80px;
+    overflow: hidden;
+    position: relative;
+    clip-path: circle(50%);
+
+    img {
+        object-fit: cover;
+    }
+}
+
+.imageRow {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.2rem;
+}
+
+.taskList {
+    li {
+        display: flex;
+        flex-direction: column !important;
+    }
+}
+
+.audioForm {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center !important;
+}
+
+.recordButton {
+    padding: 0;
+    background: linear-gradient(to top left, variables.$foreground-color, rgba(variables.$foreground-color, 0.5));
+    color: variables.$theme-red;
+    font-size: 3rem;
+    height: 4rem;
+    width: 4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 300px;
+}
+
+.stopButton {
+    padding: 0;
+    background: linear-gradient(to top left, variables.$foreground-color, rgba(variables.$foreground-color, 0.5));
+    color: variables.$background-color;
+    font-size: 3rem;
+    height: 4rem;
+    width: 4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 300px;
+}
+
+.audioButtonsContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 1.6rem;
+    margin-bottom: 0.8rem;
+}
+
+.filterButtonRow {
+    margin-bottom: 1.2rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    
+    input[type=checkbox] {
+        margin-right: 0.4rem;
+    }
+}

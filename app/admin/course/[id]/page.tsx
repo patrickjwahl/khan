@@ -6,7 +6,6 @@ export async function generateMetadata({ params }: {params: {id: string}}) {
     const course = await prisma.course.findFirst({where: {id: parseInt(params.id)}});
     return {title: `${course?.language} | Genghis Khan Academy`};
 }
-  
 
 export default async function Course({ params }: { params: { id: string }}) {
     const id = parseInt(params.id);

@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import Breadcrumbs, { Breadcrumb } from './Breadcrumbs';
 import Image from 'next/image';
 import Link from 'next/link';
+import { redirectOnMobile } from '@/lib/util';
 
 type CourseWithModules = Prisma.CourseGetPayload<{include: {modules: true}}>;
 
@@ -30,6 +31,8 @@ export default function Dashboard({ user, courses }: { user: User, courses: Cour
             link: '/admin'
         }
     ];
+
+    redirectOnMobile('/admin/mobile')
 
     useEffect(() => {
         if (modalVisible) {
@@ -66,8 +69,6 @@ export default function Dashboard({ user, courses }: { user: User, courses: Cour
         });
 
         const data = await res.json();
-
-        setIsSubmitting(false);
 
         if (data.code === 'OK') {
             router.push(`/admin/course/${data.redirectId}`);

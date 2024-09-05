@@ -317,7 +317,7 @@ export default function CourseDashboard({ course, badQuestionsPerModule, user }:
             <div style={{backgroundColor: course.published ? variables.themeBlue : variables.themeRed, padding: '0.4rem', color: variables.backgroundColor, borderRadius: '8px', fontSize: '0.8rem', fontStyle: 'italic', marginBottom: '0.8rem', fontWeight: course.published ? 'bold' : 'normal'}}>{course.published ? 'PUBLISHED' : 'UNDER CONSTRUCTION'}</div>
             <form onSubmit={updateLanguage} style={{fontSize: '12px', display: 'flex', flexDirection: 'row', gap: '0.8rem', marginBottom: '2.4rem'}}>
                 <input type='text' placeholder="New language name..." value={newTitle} onChange={e => setNewTitle(e.target.value)} />
-                <input type='submit' value="CHANGE LANGUAGE" />
+                <input type='submit' value="CHANGE NAME" />
                 <FileInput onChange={uploadImage} accept="image/jpg, image/jpeg, image/png" />
                 <button onClick={e => {e.preventDefault(); openFileDialog();}}>CHANGE IMAGE</button>
                 <button className={styles.deleteButton} onClick={deleteCourse}><FaSkullCrossbones /> DELETE COURSE</button>
