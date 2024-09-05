@@ -10,7 +10,7 @@ import { ClipLoader } from "react-spinners";
 import variables from '../../../../_variables.module.scss'
 import { convertBlobToURL } from "@/app/admin/module/[id]/ScreenDisplay";
 import { post } from "@/lib/api";
-import { stripInnerDelimiter } from "@/lib/string_processing";
+import { getMainVariant, stripInnerDelimiter } from "@/lib/string_processing";
 
 export default function ModuleMobileDashboard({ initQuestions, initWords, moduleTitle }: { initQuestions: Question[], initWords: Word[], moduleTitle: string }) {
 
@@ -124,7 +124,7 @@ export default function ModuleMobileDashboard({ initQuestions, initWords, module
             <ul className={styles.taskList}>
                 {questions.filter(question => !isFiltered || question.recording == null).map((question, index) => (
                     <li key={index} onClick={() => selectTask(index)}>
-                        <div>{stripInnerDelimiter(question.target)}</div>
+                        <div>{stripInnerDelimiter(getMainVariant(question.target))}</div>
                         {selected == index ? audioForm : (null)}
                     </li>
                 ))}
