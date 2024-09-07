@@ -2,8 +2,7 @@ import { useUser, userCanEditCourse } from "@/lib/user";
 import CourseContent from "./CourseContent";
 import { prisma } from "@/lib/db";
 import styles from '../../Learn.module.scss';
-import Sidebar from "../Sidebar";
-import SidebarContent from "../SidebarContent";
+import ErrorScreen from "../../ErrorScreen";
 
 export default async function Course({ params }: { params: { id: string }}) {
 
@@ -48,7 +47,7 @@ export default async function Course({ params }: { params: { id: string }}) {
     });
 
     if (!course) {
-        throw new Error("You're looking for a course that doesn't exist!");
+        return <ErrorScreen error="You're looking for a course that doesn't exist!" />
     }
 
     if (user) {
@@ -101,7 +100,7 @@ export default async function Course({ params }: { params: { id: string }}) {
     } 
     
     if (!course.published && (!userCanEdit)) {
-        throw new Error("You don't have access to this course!");
+        return <ErrorScreen error="You don't have access to this course!" />
     }
 
     return (

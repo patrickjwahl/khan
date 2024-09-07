@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { useUser } from "@/lib/user"
 import styles from './Mobile.module.scss';
 import Image from "next/image";
+import ErrorScreen from "@/app/learn/ErrorScreen";
 
 export async function generateMetadata({ params }: {params: {id: string}}) {
     return {title: 'Mobile Admin | Genghis Khan Academy'}
@@ -11,7 +12,7 @@ export default async function Mobile() {
     const user = await useUser()
 
     if (!user || !user.canEdit) {
-        throw new Error("You're not authorized!");
+        return <ErrorScreen error="You're not authorized!" />
     }
 
     const courses = await prisma.course.findMany({

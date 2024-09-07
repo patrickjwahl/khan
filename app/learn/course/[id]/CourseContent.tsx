@@ -60,7 +60,7 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
                 </div>     
                 )}
             </div>
-            {!course.published && <h5 style={{marginBottom: '3rem'}}>This course is in preview mode!</h5>}
+            {!course.published && <h5 className={styles.previewModeBanner}>This course is in preview mode!</h5>}
             <div className={styles.moduleList}>
                 {course.modules.map(module => {
                     return (

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import CourseDashboard from "./CourseDashboard";
 import { useUser, userCanEditCourse } from "@/lib/user";
+import ErrorScreen from "@/app/learn/ErrorScreen";
 
 export async function generateMetadata({ params }: {params: {id: string}}) {
     const course = await prisma.course.findFirst({where: {id: parseInt(params.id)}});
@@ -13,7 +14,7 @@ export default async function Course({ params }: { params: { id: string }}) {
     const user = await useUser();
 
     if (!user || !user.canEdit) {
-        throw new Error("You're not authorized!");
+        return <ErrorScreen error="You're not authorized!" />
     }
 
     const course = await prisma.course.findFirst({
@@ -35,11 +36,11 @@ export default async function Course({ params }: { params: { id: string }}) {
     });
 
     if (!course) {
-        throw new Error("Course not found!");
+        return <ErrorScreen error="I can't find that course!" />
     }
 
     if (! await userCanEditCourse(user.id, course.id, prisma)) {
-        throw new Error("You're not allowed to see that!");
+        return <ErrorScreen error="You're not allowed to see that!" />
     }
 
     const promises = course.modules.map(module => {

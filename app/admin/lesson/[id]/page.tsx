@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import LessonDashboard from "./LessonDashboard";
 import { useUser, userCanEditCourse } from "@/lib/user";
+import ErrorScreen from "@/app/learn/ErrorScreen";
 
 export async function generateMetadata({ params }: {params: {id: string}}) {
     const lesson = await prisma.lesson.findFirst({where: {id: parseInt(params.id)}});
@@ -14,7 +15,7 @@ export default async function Lesson({ params }: { params: { id: string }}) {
     const user = await useUser();
 
     if (!user || !user.canEdit) {
-        throw new Error("You're not allowed to see that!");
+        return <ErrorScreen error="You're not allowed to see that!" />
     }
 
     const lesson = await prisma.lesson.findFirst({
@@ -60,11 +61,11 @@ export default async function Lesson({ params }: { params: { id: string }}) {
     });
 
     if (!lesson) {
-        throw new Error("Lesson not found!");
+        return <ErrorScreen error="I can't find that lesson!" />
     }
 
     if (! await userCanEditCourse(user.id, lesson.module.courseId, prisma)) {
-        throw new Error("You're not allowed to see that!");
+        return <ErrorScreen error="You're not allowed to see that!" />
     }
 
     const next = await prisma.lesson.findFirst({

@@ -2,6 +2,8 @@ import { Question } from "@prisma/client";
 import ModuleDashboard from "./ModuleDashboard";
 import { useUser, userCanEditCourse } from "@/lib/user";
 import { prisma } from "@/lib/db";
+import ErrorScreen from "@/app/learn/ErrorScreen";
+import { error } from "console";
 
 export async function generateMetadata({ params }: {params: {id: string}}) {
     const module = await prisma.module.findFirst({where: {id: parseInt(params.id)}});
@@ -14,7 +16,7 @@ export default async function Module({ params }: { params: { id: string }}) {
     const user = await useUser();
 
     if (!user || !user.canEdit) {
-        throw new Error("You're not allowed to see that!");
+        return <ErrorScreen error="You're not allowed to see that!" />
     }
 
     const module = await prisma.module.findFirst({
@@ -35,11 +37,11 @@ export default async function Module({ params }: { params: { id: string }}) {
     });
 
     if (!module) {
-        throw new Error("Module not found!");
+        return <ErrorScreen error="I can't find this module!" />
     }
 
     if (! await userCanEditCourse(user.id, module?.courseId, prisma)) {
-        throw new Error("You're not allowed to see that!");
+        return <ErrorScreen error="You're not allowed to see that!" />
     }
 
     const moduleQuestions = await prisma.question.findMany({
