@@ -46,3 +46,15 @@
         width: 300px;
     }
 }
+
+.usernameString {
+    letter-spacing: 1.6px;
+    margin-top: 2.4rem;
+
+    b {
+        background-color: v.$pink;
+        color: v.$background;
+        padding: 0.4rem;
+        border-radius: 5px;
+    }
+}

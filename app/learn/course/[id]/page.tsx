@@ -48,7 +48,7 @@ export default async function Course({ params }: { params: { id: string }}) {
     });
 
     if (!course) {
-        throw new Error("Course does not exist!");
+        throw new Error("You're looking for a course that doesn't exist!");
     }
 
     if (user) {
@@ -69,18 +69,21 @@ export default async function Course({ params }: { params: { id: string }}) {
                 currentModule: true
             }});
         if (!userCourse) {
-            userCourse = await prisma.userCourse.create({
-                data: {
-                    userId: user.id,
-                    courseId: courseId,
-                    moduleId: course.modules[0].id,
-                    lessonId: course.modules[0].lessons[0].id
-                },
-                include: {
-                    currentLesson: true,
-                    currentModule: true,
-                }
-            });
+            if (course.modules.length > 0 && course.modules[0].lessons.length > 0) {
+                userCourse = await prisma.userCourse.create({
+                    data: {
+                        userId: user.id,
+                        courseId: courseId,
+                        moduleId: course.modules[0].id,
+                        lessonId: course.modules[0].lessons[0].id
+                    },
+                    include: {
+                        currentLesson: true,
+                        currentModule: true,
+                    }
+                });
+            }
+            
         } else {
             await prisma.userCourse.update({
                 where: {
@@ -92,9 +95,9 @@ export default async function Course({ params }: { params: { id: string }}) {
             });
         }
 
-        moduleIndex = userCourse.currentModule.index;
-        lessonIndex = userCourse.currentLesson.index;
-        lessonCompletions = userCourse.lessonCompletions;
+        moduleIndex = userCourse?.currentModule.index || 0;
+        lessonIndex = userCourse?.currentLesson.index || 0;
+        lessonCompletions = userCourse?.lessonCompletions || 0;
     } 
     
     if (!course.published && (!userCanEdit)) {
