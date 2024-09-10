@@ -224,7 +224,7 @@ export default function LessonScreen({ question, userInput, onUserInput, onUserS
                     <div className={styles.border} style={{visibility: correct || incorrect ? 'visible': 'hidden'}}></div>
                     <div className={cn(styles.answerContainer, {[styles.visible]: correct || incorrect})}>
                         <div data-testid="result" className={cn(styles.result, {[styles.wrong]: incorrect})}>{correct ? 'GREAT JOB!' : 'OOPS...'}</div>
-                        <div className={styles.answer}>"{question.question}" {question.questionType === 'forward' ? 'translates to' : 'means'} "{stripInnerDelimiter(question.answers[0])}"</div>
+                        <div className={styles.answer}>"{stripInnerDelimiter(question.question)}" {question.questionType === 'forward' ? 'translates to' : 'means'} "{stripInnerDelimiter(question.answers[0])}"</div>
                         {feedback && <div className={styles.answer}><b>{feedback}</b></div>}
                     </div>
                     <Keyboard onKeyPress={keyboardPressed} layout={keyboardLayoutLib.layout} layoutName={keyboardLayout} />
