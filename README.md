@@ -8,6 +8,7 @@ Now create a `.env.local` file in the project's root directory and add
 
 ```
 DATABASE_URL="postgresql://<user>:<password>@<domain>:<port>/khan"
+DIRECT_URL="postgresql://<user>:<password>@<domain>:<port>/khan"
 ```
 Replace the parts in the <> with your DB connection info.
 
