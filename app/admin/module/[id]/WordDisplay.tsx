@@ -4,16 +4,15 @@ import React, { FormEventHandler, MouseEventHandler, useContext, useRef, useStat
 import { ClipLoader } from "react-spinners";
 import variables from '../../../_variables.module.scss';
 import { ModuleWithLessonsAndCourse } from "./ModuleDashboard";
-import audioRecorder from "@/lib/audio";
-import { FaStop } from "react-icons/fa";
-import { BsFillPlayCircleFill, BsRecordCircleFill } from "react-icons/bs";
-import { convertBlobToURL } from "./ScreenDisplay";
 import cn from 'classnames';
 import { AiFillSound } from 'react-icons/ai';
 import { TiDelete } from "react-icons/ti";
 import Link from "next/link";
 import { ToastContext } from "../../Toast";
 import { getMainVariant } from "@/lib/string_processing";
+import { post } from "@/lib/api";
+import AudioForm from "./AudioForm";
+import { convertBlobToURL } from "@/lib/audio";
 
 export default function WordDisplay({initWords, module, initWordsToQuestions, setQuestion}: {initWords: Word[], module: ModuleWithLessonsAndCourse, initWordsToQuestions: {[id: number]: Question[]}, setQuestion: (id: Question) => void}) {
 
@@ -30,37 +29,8 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
     const [ nativeAlt, setNativeAlt ] = useState('');
     const [ audioBlob, setAudioBlob ] = useState<null | Blob>(null);
 
-    const [ audioRecording, setAudioRecording ] = useState(false);
-
     const topRef = useRef<HTMLInputElement | null>(null);
     const addToast = useContext(ToastContext);
-
-    const startRecording: MouseEventHandler = async e => {
-        e.preventDefault();
-
-        await audioRecorder.start();
-        setAudioRecording(true);
-    }
-
-    const stopRecording: MouseEventHandler = async e => {
-
-        e.preventDefault();
-
-        const audioAsBlob = await audioRecorder.stop();
-
-        setAudioRecording(false);
-        setAudioBlob(audioAsBlob);
-    }
-
-    const playAudio: MouseEventHandler = e => {
-
-        e.preventDefault();
-        if (!audioBlob) return;
-
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
-        audio.play();
-    };
 
     const fetchWords = async () => {
         const res = await fetch(`/api/module/${module.id}/words`);
@@ -131,14 +101,7 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
 
         const url = wordId ? `/api/word/${wordId}` : '/api/word';
 
-        const res = await fetch(url, {
-            method: 'POST',
-            body: JSON.stringify(payload),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
+        const res = await post(url, payload);
         const data = await res.json();
 
         addToast(wordId ? 'Word updated' : 'Word added');
@@ -148,17 +111,6 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
 
         setIsSubmitting(false);
     }
-
-    const audioForm = (
-        <>
-            <div className={styles.formSectionHeader}>RECORD AUDIO</div>
-            <div className={styles.audioButtonsContainer}>
-                {audioRecording ? <button onClick={stopRecording} className={styles.stopButton}><FaStop /></button> 
-                : <button onClick={startRecording} className={styles.recordButton}><BsRecordCircleFill /></button>}
-                {!audioRecording && audioBlob != null ? <button onClick={playAudio} className={styles.stopButton}><BsFillPlayCircleFill /></button> : (null)}
-            </div>
-        </>
-    );
 
     const uploadCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || !window.confirm("WARNING! This will overwrite all current words! Continue?")) return;
@@ -227,7 +179,7 @@ export default function WordDisplay({initWords, module, initWordsToQuestions, se
                         <div className={styles.formSectionHeader}>ENGLISH</div>
                         <input type="text" placeholder={`Word in English`} value={native} onChange={e => setNative(e.target.value)} />
                         <input type="text" placeholder={`Alt. translations (semicolon separated)`} value={nativeAlt} onChange={e => setNativeAlt(e.target.value)} />
-                        {audioForm}
+                        <AudioForm audioBlob={audioBlob} setAudioBlob={setAudioBlob} />
                     </form>
                 </div>
             </div>

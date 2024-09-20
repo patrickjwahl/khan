@@ -1,3 +1,7 @@
+'use client'
+
+import { Question } from "@prisma/client";
+
 interface AudioRecorder {
     audioBlobs: Blob[];
     mediaRecorder: MediaRecorder | null;
@@ -79,3 +83,29 @@ const audioRecorder: AudioRecorder = {
 };
 
 export default audioRecorder;
+
+export const convertBlobToURL = (blob: Blob | null): Promise<string | null> | null => {
+
+    if (!blob) return null;
+
+    return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onload = () => {
+            resolve(reader.result as string);
+        }
+    });
+};
+
+export const playTableRecording = (q: Question) => {
+
+    const recordingURL = q.recording;
+
+    if (!recordingURL) return;
+    fetch(recordingURL).then(async res => {
+        const blob = await res.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+        audio.play();
+    });
+};

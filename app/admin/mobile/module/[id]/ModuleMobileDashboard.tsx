@@ -5,10 +5,9 @@ import styles from '../../Mobile.module.scss';
 import { ChangeEventHandler, MouseEventHandler, useState } from "react";
 import { FaStop } from "react-icons/fa";
 import { BsFillPlayCircleFill, BsRecordCircleFill } from "react-icons/bs";
-import audioRecorder from "@/lib/audio";
+import audioRecorder, { convertBlobToURL } from "@/lib/audio";
 import { ClipLoader } from "react-spinners";
 import variables from '../../../../_variables.module.scss'
-import { convertBlobToURL } from "@/app/admin/module/[id]/ScreenDisplay";
 import { post } from "@/lib/api";
 import { getMainVariant, stripInnerDelimiter } from "@/lib/string_processing";
 
