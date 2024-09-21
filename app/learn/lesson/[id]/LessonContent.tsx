@@ -1,8 +1,8 @@
 'use client'
 
-import { Lesson, Prisma, UserCourse } from "@prisma/client";
+import { Prisma, UserCourse } from "@prisma/client";
 import styles from './Lesson.module.scss';
-import { KeyboardEventHandler, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import LessonScreen from "./LessonScreen";
 import { LessonQuestion } from "./page";
 import { useSound } from 'use-sound';

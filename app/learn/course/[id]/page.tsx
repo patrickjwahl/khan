@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import styles from '../../Learn.module.scss';
 import ErrorScreen from "../../ErrorScreen";
 
+export const revalidate = 0
+
 export default async function Course({ params }: { params: { id: string }}) {
 
     const courseId = parseInt(params.id);
@@ -95,7 +97,7 @@ export default async function Course({ params }: { params: { id: string }}) {
         }
 
         moduleIndex = userCourse?.currentModule.index || 0;
-        lessonIndex = userCourse?.currentLesson.index || 0;
+        lessonIndex = userCourse?.currentLesson?.index || 0;
         lessonCompletions = userCourse?.lessonCompletions || 0;
     } 
     

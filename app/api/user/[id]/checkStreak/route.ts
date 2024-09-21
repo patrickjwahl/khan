@@ -22,9 +22,6 @@ export async function POST(request: NextRequest, context: { params: {id: string}
 
     let streak = 0;
 
-    console.log('we in dis');
-    console.log(user.streak);
-
     if (lastLessonDate.toDateString() === now.toDateString()) {
         // same day, streak stays same
         streak = user.streak;

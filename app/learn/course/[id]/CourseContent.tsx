@@ -74,7 +74,7 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
                             <div>
                                 <h4>{module.title}</h4>
                                 <div>
-                                    <button className='orange'>STUDY</button>
+                                    <a href={`/learn/module/${module.id}/study`}><button className='orange'>STUDY</button></a>
                                     <button className='purple'>PRACTICE</button>
                                 </div>
                                 {!module.published && <div>This module is in preview mode!</div>}

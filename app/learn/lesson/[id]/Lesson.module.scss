@@ -60,10 +60,46 @@
 
     > h5 {
         margin-bottom: 1.6rem;
+        background-color: v.$superlightpink;
+        color: v.$background;
+        border-radius: 10px;
+        padding: 0.4rem;
+    }
+
+    h2 {
+        margin-bottom: 1.6rem;
     }
 
     table {
         margin-bottom: 1.2rem;
+        border-collapse: separate !important;
+        border-radius: 10px;
+        border-spacing: 0;
+        
+        td {
+            padding: 0.4rem;
+            &:not(last-child) {
+                border-right: none;
+            }
+
+            &:first-child {
+                border-left: none;
+            }
+        }
+
+        tr {
+            &:not(last-child) {
+                >td {
+                    border-bottom: none;
+                }
+            }
+
+            &:first-child {
+                >td {
+                    border-top: none;
+                }
+            }
+        }
     }
 }
 
@@ -222,4 +258,66 @@
     font-weight: bold;
     color: v.$background;
     padding-right: 0.4rem;
+}
+
+.studyContainer {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    overflow-y: scroll;
+
+    .infoContent {
+        width: auto;
+        padding-bottom: 2.4rem;
+    }
+
+    .studySidebar {
+        height: 100%;
+        padding: 1.6rem;
+        width: 30vw;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.2rem;
+        position: sticky;
+        top: 0;
+
+        button {
+            margin-top: 0.8rem;
+        }
+
+        ul {
+            margin-top: 2.4rem;
+            list-style-type: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            width: 100%;
+            padding: 2.4rem;
+            overflow-y: scroll;
+
+            li {
+                font-size: larger;
+                cursor: pointer;
+                padding: 0.8rem;
+                border-radius: 10px;
+
+                &.selected {
+                    background-color: v.$orange;
+                    color: v.$background;
+                }
+
+                &:hover:not(.selected) {
+                    background-color: v.$superlightorange;
+                }
+            }
+        }
+    }
+
+    .studyContent {
+        flex: 1;
+        padding: 6.4rem;
+    }
 }

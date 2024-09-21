@@ -154,18 +154,18 @@ model Exp {
 }
 
 model UserCourse {
-    id                Int     @id @default(autoincrement())
-    user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId            Int     @map("user_id")
-    course            Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
-    courseId          Int     @map("course_id")
-    currentModule     Module  @relation(fields: [moduleId], references: [id])
-    currentLesson     Lesson  @relation(fields: [lessonId], references: [id])
-    lessonCompletions Int     @default(0) @map("lesson_completions")
-    isCurrent         Boolean @default(true) @map("is_current")
+    id                Int       @id @default(autoincrement())
+    user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId            Int       @map("user_id")
+    course            Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+    courseId          Int       @map("course_id")
+    currentModule     Module    @relation(fields: [moduleId], references: [id])
+    currentLesson     Lesson?   @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+    lessonCompletions Int       @default(0) @map("lesson_completions")
+    isCurrent         Boolean   @default(true) @map("is_current")
     exp               Exp[]
-    lessonId          Int     @map("lesson_id")
-    moduleId          Int     @map("module_id")
+    lessonId          Int?      @map("lesson_id")
+    moduleId          Int       @map("module_id")
 
     @@map("user_course")
 }
