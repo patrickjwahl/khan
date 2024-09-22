@@ -24,12 +24,7 @@ export async function POST(request: NextRequest,  context: { params: { id: strin
 
     await prisma.question.deleteMany({
         where: {
-            moduleId: moduleId,
-            type: {
-                not: {
-                    equals: 'INFO'
-                }
-            }
+            moduleId: moduleId
         }
     });
 
