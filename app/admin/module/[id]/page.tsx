@@ -120,7 +120,7 @@ export default async function Module({ params }: { params: { id: string }}) {
             }
         },
         orderBy: {
-            index: 'desc'
+            index: 'asc'
         },
         select: {
             id: true
@@ -135,7 +135,7 @@ export default async function Module({ params }: { params: { id: string }}) {
             }
         },
         orderBy: {
-            index: 'asc'
+            index: 'desc'
         },
         select: {
             id: true

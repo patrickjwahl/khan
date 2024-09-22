@@ -4,6 +4,7 @@ const SYNONYM_DELIMITER = ';';
 const SYMBOLS_REGEX = /[.,\/#!\?$%\^&;:{}=\-_`~()]/g;
 const PUNCTUATION_REGEX = /[¿¡]/g;
 const INNER_TOKEN_DELIMITER = '*';
+const UNI_QUOTE = '\u2019'
 
 export type WordHintToken = {
     token: string;
@@ -31,7 +32,7 @@ export const getSynonyms = (synonyms: string | null): string[] => {
 export const stripSymbols = (value: string | null): string => {
     if (!value) return '';
 
-    return value.replace(SYMBOLS_REGEX, "").replace(PUNCTUATION_REGEX, "");
+    return value.replace(SYMBOLS_REGEX, "").replace(PUNCTUATION_REGEX, "").replace(UNI_QUOTE, '\'');
 };
 
 export const getTokens = (sentence: string | null): WordHintToken[] => {

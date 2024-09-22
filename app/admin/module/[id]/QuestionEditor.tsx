@@ -176,6 +176,15 @@ export default function QuestionEditor({ module, question, language, fetchData }
         submitData();
     };
 
+    const universalizeWordHint = (index: number, isForward: boolean) => {
+        return async () => {
+            const hint = (isForward) ? wordHintsForward[index] : wordHintsBackward[index]
+            await post(`/api/module/${module.id}/wordHint/universalize`, hint)
+            addToast("Applied changes")
+            fetchData()
+        }
+    }
+
     const handleWordHintForwardChange = (index: number) => {
         return (wordId: number | null) => {
             const newHints = [...wordHintsForward];
@@ -264,12 +273,12 @@ export default function QuestionEditor({ module, question, language, fetchData }
 
             <div className={styles.formSectionHeader}>WORD HINTS (BACKWARD)</div>
             {wordHintsBackward.map((hint, index) => {
-                return <WordHintEditor key={index} isForward={false} hint={hint} prevHint={(index > 0 && wordHintsBackward[index - 1]) || null} setId={handleWordHintBackwardChange(index)} courseId={module.courseId} />
+                return <WordHintEditor key={index} isForward={false} hint={hint} prevHint={(index > 0 && wordHintsBackward[index - 1]) || null} setId={handleWordHintBackwardChange(index)} universalize={universalizeWordHint(index, false)} courseId={module.courseId} />
             })}
 
             <div className={styles.formSectionHeader}>WORD HINTS (FORWARD)</div>
             {wordHintsForward.map((hint, index) => {
-                return <WordHintEditor key={index} isForward hint={hint} prevHint={(index > 0 && wordHintsForward[index - 1]) || null} setId={handleWordHintForwardChange(index)} courseId={module.courseId} />
+                return <WordHintEditor key={index} isForward hint={hint} prevHint={(index > 0 && wordHintsForward[index - 1]) || null} setId={handleWordHintForwardChange(index)} universalize={universalizeWordHint(index, true)} courseId={module.courseId} />
             })}
 
             {feedbackRulesForm}

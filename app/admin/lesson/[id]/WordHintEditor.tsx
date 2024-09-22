@@ -1,12 +1,12 @@
 import { KeyboardEventHandler, MouseEventHandler, ReactNode, useEffect, useState } from 'react';
 import styles from './WordHint.module.scss';
 import { WordHint } from './LessonDashboard';
-import { FaArrowRight } from 'react-icons/fa';
+import { FaArrowRight, FaGlobeAmericas } from 'react-icons/fa';
 import { AiFillCaretUp, AiOutlineSearch } from 'react-icons/ai';
 import { post } from '@/lib/api';
 
 
-export default function WordHintEditor({isForward, hint, prevHint, setId, courseId}: {isForward: boolean, hint: WordHint, prevHint: WordHint | null, setId: (id: number | null) => void, courseId: number}) {
+export default function WordHintEditor({isForward, hint, prevHint, setId, universalize, courseId}: {isForward: boolean, hint: WordHint, prevHint: WordHint | null, setId: (id: number | null) => void, universalize: () => void, courseId: number}) {
 
     const [ root, setRoot ] = useState('');
     const [ error, setError ] = useState(false);
@@ -57,6 +57,12 @@ export default function WordHintEditor({isForward, hint, prevHint, setId, course
         }
     }
 
+    const handleUniversalize: MouseEventHandler = async e => {
+        e.preventDefault();
+
+        universalize();
+    }
+
     const handleKeyUp: KeyboardEventHandler = e => {
         e.preventDefault();
         if (e.key === 'Enter') {
@@ -84,7 +90,8 @@ export default function WordHintEditor({isForward, hint, prevHint, setId, course
                 <FaArrowRight />
                 <div>{targetOverride || hint.wordEntity && `${hint.wordEntity.target} (${hint.wordEntity.native})` || <i>None</i>}</div>
             </div>
-            <div>
+            <div className={styles.buttonsAndSearch}>
+                <button title={`Use this hint for all appearances of "${hint.wordString}" in module`} onClick={handleUniversalize}><FaGlobeAmericas /></button>
                 <input type="text" placeholder='Root word' value={root} onKeyDown={handleKeyDown} onKeyUp={handleKeyUp} onChange={e => {if (error) setError(false); setRoot(e.target.value)}}/>
                 <div className={styles.buttonContainer}>
                     { prevHint && <button title='Match previous' onClick={handleMatchPrevious}><AiFillCaretUp /></button> }
