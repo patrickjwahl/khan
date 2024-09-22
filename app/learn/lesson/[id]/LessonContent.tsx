@@ -101,7 +101,7 @@ export default function LessonContent({ lesson, questions, userCourse, numLesson
                     lessonId: lesson.id,
                 }
 
-                post(`/api/userCourse/${userCourse.id}/completeLesson`, payload);
+                await post(`/api/userCourse/${userCourse.id}/completeLesson`, payload);
             }
             playHorn();
             setTransitioning(true);

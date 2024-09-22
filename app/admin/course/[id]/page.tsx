@@ -59,5 +59,18 @@ export default async function Course({ params }: { params: { id: string }}) {
         return {...prev, [curr.id]: curr.badQuestions};
     }, {});
 
+    const wordPromises = course.modules.map(module => {
+        return prisma.word.count({
+            where: {
+                moduleId: module.id,
+                recording: null
+            }
+        }).then(res => ({id: module.id, badWords: res}));
+    });
+
+    const badWords: {[id: number]: number} = (await Promise.all(wordPromises)).reduce((prev, curr) => {
+        return {...prev, [curr.id]: curr.badWords};
+    }, {});
+
     return <CourseDashboard course={course} badQuestionsPerModule={badQuestions} user={user} />
 }

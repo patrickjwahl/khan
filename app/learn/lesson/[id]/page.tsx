@@ -101,8 +101,8 @@ export default async function Lesson({ params }: { params: { id: string }}) {
 
     if (!lesson.module.course.published || !lesson.module.published) {
         mode = LessonMode.Preview;
-    } else if (userCourse.currentLesson?.module.index || 0 < lesson.module.index || (userCourse.moduleId === lesson.moduleId && userCourse.currentLesson?.index || 0 < lesson.index)) {
-        throw new Error("You haven't unlocked this lesson yet!");
+    } else if ((userCourse.currentLesson?.module.index || 0) < lesson.module.index || (userCourse.moduleId === lesson.moduleId && (userCourse.currentLesson?.index || 0) < lesson.index)) {
+        return <ErrorScreen error="You haven't unlocked this lesson yet!" />
     } else if (userCourse.currentLesson?.id === lessonId && userCourse.lessonCompletions === 0) {
         // This is the user's current lesson and they haven't completed it once yet
         mode = LessonMode.FirstPass;

@@ -5,6 +5,7 @@ import styles from '../../Learn.module.scss';
 import ErrorScreen from "../../ErrorScreen";
 
 export const revalidate = 0
+export const dynamic = 'force-dynamic'
 
 export default async function Course({ params }: { params: { id: string }}) {
 
