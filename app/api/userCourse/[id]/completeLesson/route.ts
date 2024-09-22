@@ -87,7 +87,7 @@ export async function POST(request: NextRequest, context: { params: {id: string}
 
     if (lessonId !== userCourse.lessonId || lesson.moduleId !== userCourse.moduleId) {
         // Not the user's current lesson, give them credit for trying
-        addExp(EXP_FOR_ALREADY_FINISHED_LESSON, date, userCourse.id);
+        await addExp(EXP_FOR_ALREADY_FINISHED_LESSON, date, userCourse.id);
         return NextResponse.json({code: 'OK'});
     }
 
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest, context: { params: {id: string}
             }
         });
 
-        addExp(EXP_FOR_LESSON_COMPLETE, date, userCourse.id);
+        await addExp(EXP_FOR_LESSON_COMPLETE, date, userCourse.id);
     } else {
         const newLesson = await prisma.lesson.findFirst({
             where: {
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest, context: { params: {id: string}
                     }
                 });
 
-                addExp(EXP_FOR_MODULE_COMPLETE, date, userCourse.id);
+                await addExp(EXP_FOR_MODULE_COMPLETE, date, userCourse.id);
             }
         } else {
             // move to next lesson
@@ -168,7 +168,7 @@ export async function POST(request: NextRequest, context: { params: {id: string}
                 }
             });
 
-            addExp(EXP_FOR_LESSON_COMPLETE, date, userCourse.id);
+            await addExp(EXP_FOR_LESSON_COMPLETE, date, userCourse.id);
         }
     }
 
