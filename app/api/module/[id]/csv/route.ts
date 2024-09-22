@@ -21,7 +21,17 @@ export async function POST(request: NextRequest,  context: { params: { id: strin
     }
 
     await prisma.lesson.deleteMany({where: {moduleId: moduleId}});
-    await prisma.question.deleteMany({where: {moduleId: moduleId}});
+
+    await prisma.question.deleteMany({
+        where: {
+            moduleId: moduleId,
+            type: {
+                not: {
+                    equals: 'INFO'
+                }
+            }
+        }
+    });
 
     const data: Row[] = parse(text, {skip_empty_lines: true, fromLine: 2, columns: ['lesson', 'target', 'native', 'pass', 'forwardEnabled', 'backwardEnabled', 'audioEnabled']});
 
