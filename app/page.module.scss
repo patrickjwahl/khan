@@ -58,3 +58,31 @@
         border-radius: 5px;
     }
 }
+
+@media screen and (max-width: 700px) {
+
+    .container {
+        width: 100%;
+    }
+
+    .bigTitles {
+        h1 {
+            font-size: larger;
+            letter-spacing: 4px;
+        }
+
+        h4 {
+            font-size: larger;
+            letter-spacing: normal;
+        }
+    }
+
+    .buttonContainer {
+        flex-direction: column;
+        a {
+            &:last-child {
+                display: none;
+            }
+        }
+    }
+}
