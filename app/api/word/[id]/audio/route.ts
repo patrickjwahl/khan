@@ -13,7 +13,7 @@ export async function POST(request: NextRequest, context: { params: {id: string}
     const word = await prisma.word.findFirst({where: {id: wordId}, include: {module: true}});
 
     if (!word) {
-        return NextResponse.json({'code': 'NO_SUCH_QUESTION'})
+        return NextResponse.json({'code': 'NO_SUCH_WORD'})
     } else {
         courseId = word.module.courseId;
     }
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest, context: { params: {id: string}
         return NextResponse.json({'code': 'UNAUTHORIZED'});
     }
 
-    await prisma.question.update({where: {id: wordId}, data: {recording: requestData.recording}});
+    await prisma.word.update({where: {id: wordId}, data: {recording: requestData.recording}});
 
     return NextResponse.json({code: 'OK'});
 }
