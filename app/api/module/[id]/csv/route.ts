@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { parse } from 'csv-parse/sync';
 import { prisma } from "@/lib/db";
 import { useUser, userCanEditCourse } from "@/lib/user";
-import { getMainVariant, getTokens } from "@/lib/string_processing";
+import { getMainVariant, getTokens, splitStringIntoVariations } from "@/lib/string_processing";
 
 type Row = { target: string, native: string, lesson: string, pass: string, forwardEnabled: string, backwardEnabled: string, audioEnabled: string};
 
@@ -61,8 +61,8 @@ export async function POST(request: NextRequest,  context: { params: { id: strin
             lessons[lesson] = {id: lessonId, index: questionIndex + 1};
         }
 
-        const native = row.native.split(';').map(v => splitString(v)).flat().join('\n');
-        const target = row.target.split(';').map(v => splitString(v)).flat().join('\n');
+        const native = row.native.split(';').map(v => splitStringIntoVariations(v)).flat().join('\n');
+        const target = row.target.split(';').map(v => splitStringIntoVariations(v)).flat().join('\n');
         const firstPass = row.pass == '1';
         const forwardEnabled = row.forwardEnabled != "f";
         const backwardEnabled = row.backwardEnabled != "f";
@@ -177,17 +177,4 @@ export async function POST(request: NextRequest,  context: { params: { id: strin
     }
 
     return NextResponse.json({code: 'OK'});
-}
-
-const splitString: (input: string) => string[] = (input: string) => {
-    const bracketSections = input.match(/\[(.*?)\]/g);
-    if (!bracketSections || bracketSections?.length === 0) return [input];
-
-    const bracketVariations = bracketSections[0].slice(1, -1).split('/');
-    const variations = bracketVariations.map(v => {
-        const newInput = input.replace(/\[(.*?)\]/, v);
-        return splitString(newInput).flat();
-    });
-
-    return variations.flat().map(v => v.replace(/ +/g, ' '));
 }

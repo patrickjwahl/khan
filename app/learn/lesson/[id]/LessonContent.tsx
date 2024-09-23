@@ -1,6 +1,6 @@
 'use client'
 
-import { Prisma, UserCourse } from "@prisma/client";
+import { Lesson, Prisma, UserCourse } from "@prisma/client";
 import styles from './Lesson.module.scss';
 import { useEffect, useState } from "react";
 import LessonScreen from "./LessonScreen";
@@ -12,11 +12,13 @@ import { useRouter } from "next/navigation";
 import { COMPLETIONS_FOR_LESSON_PASS, EXP_FOR_ALREADY_FINISHED_LESSON, EXP_FOR_LESSON_COMPLETE } from "@/lib/settings";
 import { post } from "@/lib/api";
 import { normalizeAnswer } from "@/lib/string_processing";
+import ErrorScreen from "../../ErrorScreen";
 
-export type ScreenState = 'hiding' | 'visible' | 'appearing' | 'invisible';
-export type LessonWithCourse = Prisma.LessonGetPayload<{include: {module: {include: {course: true}}}}>;
+export type ScreenState = 'hiding' | 'visible' | 'appearing' | 'invisible'
+export type LessonMode = 'lesson' | 'review'
+export type ModuleWithCourse = Prisma.ModuleGetPayload<{include: {course: true}}>
 
-export default function LessonContent({ lesson, questions, userCourse, numLessons }: { lesson: LessonWithCourse, questions: LessonQuestion[], userCourse: UserCourse | null, numLessons: number }) {
+export default function LessonContent({ lesson = null, module, mode, questions, userCourse, numLessons }: { lesson?: Lesson | null, module: ModuleWithCourse, mode: LessonMode, questions: LessonQuestion[], userCourse: UserCourse | null, numLessons: number }) {
 
     const numQuestions = questions.filter(q => q.type === 'QUESTION').length;
 
@@ -47,7 +49,16 @@ export default function LessonContent({ lesson, questions, userCourse, numLesson
         text && text.focus();
     };
 
-    const exp = userCourse ? ` (+${userCourse.lessonId === lesson.id && userCourse.moduleId === lesson.module.id ? EXP_FOR_LESSON_COMPLETE : EXP_FOR_ALREADY_FINISHED_LESSON} EXP)` : '';
+    if (mode === 'lesson' && !lesson) {
+        return <ErrorScreen error="An error occurred. Sorry." />
+    }
+
+    let exp
+    if (mode === 'lesson' && lesson) {
+        exp = userCourse ? ` (+${userCourse.lessonId === lesson.id && userCourse.moduleId === module.id ? EXP_FOR_LESSON_COMPLETE : EXP_FOR_ALREADY_FINISHED_LESSON} EXP)` : '';
+    } else {
+        exp = EXP_FOR_ALREADY_FINISHED_LESSON
+    }
 
     const handleKeyDown = (e: KeyboardEvent) => {
         if (e.code === 'Enter') {
@@ -77,35 +88,37 @@ export default function LessonContent({ lesson, questions, userCourse, numLesson
     const handleNext = async () => {
 
         if (currentQuestion === screens.length - 1) {
-            if (!userCourse) {
-                let fullGuestSession = JSON.parse(localStorage.getItem('guestSession') || `{${lesson.module.courseId}: { moduleIndex: 0, lessonIndex: 0, lessonCompletions: 0 }}`);
-                const guestSession = fullGuestSession[lesson.module.courseId];
-                if (guestSession.moduleIndex === lesson.module.index && guestSession.lessonIndex === lesson.index) {
-                    guestSession.lessonCompletions = guestSession.lessonCompletions + 1;
-                    if (guestSession.lessonCompletions === COMPLETIONS_FOR_LESSON_PASS) {
-                        guestSession.lessonIndex = lesson.index + 1;
-                        guestSession.lessonCompletions = 0;
-
-                        if (guestSession.lessonIndex === numLessons) {
-                            guestSession.moduleIndex = guestSession.moduleIndex + 1;
+            if (mode === 'lesson' && lesson) {
+                if (!userCourse) {
+                    let fullGuestSession = JSON.parse(localStorage.getItem('guestSession') || `{${module.courseId}: { moduleIndex: 0, lessonIndex: 0, lessonCompletions: 0 }}`);
+                    const guestSession = fullGuestSession[module.courseId];
+                    if (guestSession.moduleIndex === module.index && guestSession.lessonIndex === lesson.index) {
+                        guestSession.lessonCompletions = guestSession.lessonCompletions + 1;
+                        if (guestSession.lessonCompletions === COMPLETIONS_FOR_LESSON_PASS) {
+                            guestSession.lessonIndex = lesson.index + 1;
                             guestSession.lessonCompletions = 0;
-                            guestSession.lessonIndex = 0;
-                        }
-                    }
-                    fullGuestSession[lesson.module.courseId] = guestSession;
-                    localStorage.setItem('guestSession', fullGuestSession);
-                }
-            } else {
-                const payload = {
-                    date: new Date().toDateString(),
-                    lessonId: lesson.id,
-                }
 
-                await post(`/api/userCourse/${userCourse.id}/completeLesson`, payload);
+                            if (guestSession.lessonIndex === numLessons) {
+                                guestSession.moduleIndex = guestSession.moduleIndex + 1;
+                                guestSession.lessonCompletions = 0;
+                                guestSession.lessonIndex = 0;
+                            }
+                        }
+                        fullGuestSession[module.courseId] = guestSession;
+                        localStorage.setItem('guestSession', fullGuestSession);
+                    }
+                } else {
+                    const payload = {
+                        date: new Date().toDateString(),
+                        lessonId: lesson.id,
+                    }
+
+                    await post(`/api/userCourse/${userCourse.id}/completeLesson`, payload);
+                }
             }
             playHorn();
             setTransitioning(true);
-            router.push(`/learn/course/${lesson.module.courseId}`);
+            router.push(`/learn/course/${module.courseId}`);
             return;
         }
 
@@ -157,15 +170,15 @@ export default function LessonContent({ lesson, questions, userCourse, numLesson
         <div className={styles.container}>
             <div className={styles.lessonTopBar}>
                 <div>
-                    <button onClick={() => router.push(`/learn/course/${lesson.module.courseId}`)}>EXIT</button>
+                    <button onClick={() => router.push(`/learn/course/${module.courseId}`)}>EXIT</button>
                     <button onClick={() => location.reload()}>RESTART</button>
                 </div>
                 
                 <ProgressBar customLabel={`${numCorrect}/${numQuestions}`} completed={Math.floor(numCorrect * 100 / numQuestions)} baseBgColor={variables.darkbackground} bgColor={variables.orange} labelClassName={styles.progressBarLabel} />
             </div>
             <div className={styles.lessonMain}>
-                <LessonScreen language={lesson.module.course.language} question={screens[currentQuestion]} userInput={userInput} state={transitioning ? 'hiding' : 'visible'} onUserInput={setUserInput} onUserSubmit={handleButtonClick} correct={correct} incorrect={incorrect} feedback={feedback} />
-                {screens[currentQuestion + 1] && <LessonScreen language={lesson.module.course.language} question={screens[currentQuestion + 1]} userInput={userInput} onUserInput={setUserInput} onUserSubmit={handleButtonClick} state={transitioning ? 'appearing' : 'invisible'} />}
+                <LessonScreen language={module.course.language} question={screens[currentQuestion]} userInput={userInput} state={transitioning ? 'hiding' : 'visible'} onUserInput={setUserInput} onUserSubmit={handleButtonClick} correct={correct} incorrect={incorrect} feedback={feedback} />
+                {screens[currentQuestion + 1] && <LessonScreen language={module.course.language} question={screens[currentQuestion + 1]} userInput={userInput} onUserInput={setUserInput} onUserSubmit={handleButtonClick} state={transitioning ? 'appearing' : 'invisible'} />}
             </div>
             <div className={styles.lessonBottomBar}>
                 <button onClick={handleIncorrect} style={{visibility: incorrect || correct || screens[currentQuestion].type === 'INFO' ? 'hidden' : 'visible'}} className="orange">SKIP</button>

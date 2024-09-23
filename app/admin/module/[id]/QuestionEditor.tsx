@@ -5,20 +5,20 @@ import InfoEditor from '../../lesson/[id]/InfoEditor';
 import WordHintEditor from '../../lesson/[id]/WordHintEditor';
 import AudioForm from './AudioForm';
 import { QuestionWithFeedback } from './ScreenDisplay';
-import { MouseEventHandler, useContext, useRef, useState } from 'react';
+import { ChangeEventHandler, MouseEventHandler, useContext, useRef, useState } from 'react';
 import { FeedbackRule, Module, QuestionType } from '@prisma/client';
 import { WordHint } from '../../lesson/[id]/LessonDashboard';
 import { convertBlobToURL } from '@/lib/audio';
 import { post } from '@/lib/api';
 import variables from '../../../_variables.module.scss';
-import { getMainVariant } from '@/lib/string_processing';
+import { SYNONYM_DELIMITER, VARIANT_DELIMITER, getMainVariant, splitStringIntoVariations } from '@/lib/string_processing';
 import { ToastContext } from '../../Toast';
 
 export default function QuestionEditor({ module, question, language, fetchData }: { 
                                                         module: Module, 
                                                         question: QuestionWithFeedback | null, 
                                                         language: string,
-                                                        fetchData: () => void }) {
+                                                        fetchData: () => Promise<void> }) {
 
     const [ prevQuestion, setPrevQuestion ] = useState<QuestionWithFeedback | null>(question);
 
@@ -66,11 +66,7 @@ export default function QuestionEditor({ module, question, language, fetchData }
         topRef.current && topRef.current.focus();
     }
 
-    if (prevQuestion?.id != question?.id) {
-        // question prop changed, so let's update our state
-
-        setPrevQuestion(question)
-
+    const refreshState = () => {
         if (!question) { 
 
             newQuestion();
@@ -102,6 +98,15 @@ export default function QuestionEditor({ module, question, language, fetchData }
         }
     }
 
+    if (prevQuestion?.id != question?.id || prevQuestion?.target != question?.target || prevQuestion?.native != question?.native) {
+        // question prop changed, so let's update our state
+
+        console.log(question?.native)
+
+        setPrevQuestion(question)
+        refreshState()
+    }
+
     const submitData = async () => {
         if (!native && !infoTitle) return;
 
@@ -113,12 +118,18 @@ export default function QuestionEditor({ module, question, language, fetchData }
 
         const maxIndex = -1;
 
+        const targetVariations = target.split(VARIANT_DELIMITER)
+        const expandedTargetVariations = targetVariations.flatMap(v => v.split(SYNONYM_DELIMITER).flatMap(splitStringIntoVariations)).join(VARIANT_DELIMITER)
+
+        const nativeVariations = native.split(VARIANT_DELIMITER)
+        const expandedNativeVariations = nativeVariations.flatMap(v => v.split(SYNONYM_DELIMITER).flatMap(splitStringIntoVariations)).join(VARIANT_DELIMITER)
+
         if (type === 'QUESTION') {
             const newQuestion: QuestionWithFeedback = {
                 id: questionId || -1,
                 type: 'QUESTION',
-                target: target,
-                native: native,
+                target: expandedTargetVariations,
+                native: expandedNativeVariations,
                 info: null,
                 infoTitle: null,
                 moduleId: module.id,
@@ -167,8 +178,9 @@ export default function QuestionEditor({ module, question, language, fetchData }
         const data = await res.json();
 
         addToast(questionId ? 'Screen updated' : 'Screen added');
-        fetchData();
+        await fetchData();
         setIsSubmitting(false);
+        refreshState()
     }
 
     const submitClicked: MouseEventHandler = async e => {
@@ -220,6 +232,10 @@ export default function QuestionEditor({ module, question, language, fetchData }
         const newRules: FeedbackRule[] = [...feedbackRules, {trigger: '', feedback: '', id: -1} as FeedbackRule]
         setFeedbackRules(newRules);
     };
+
+    const handleNativeSentenceChange: ChangeEventHandler<HTMLTextAreaElement> = e => {
+        
+    }
 
     const notesForm = (
         <>

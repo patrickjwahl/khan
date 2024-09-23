@@ -20,25 +20,26 @@ import { playTableRecording } from '@/lib/audio';
 type QuestionWithFeedbackAndLesson = Prisma.QuestionGetPayload<{include: {feedbackRules: true, lesson: true, wordHintsBackward: { include: {wordEntity: true}}, wordHintsForward: { include: {wordEntity: true}}}}>;
 export type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHintsForward: { include: {wordEntity: true}}, wordHintsBackward: { include: {wordEntity: true}}}}>;
 
-export default function ScreenDisplay({ module, questions, forceSelectedQuestion, ackSelectedQuestion, notesClicked, fetchData }: {module: ModuleWithLessonsAndCourse, questions: QuestionWithFeedbackAndLesson[], forceSelectedQuestion: Question | null, ackSelectedQuestion: () => void, notesClicked: (question: QuestionWithFeedback, e: React.MouseEvent<HTMLButtonElement>) => void, fetchData: () => void} ) {
+export default function ScreenDisplay({ module, questions, forceSelectedQuestion, ackSelectedQuestion, notesClicked, fetchData }: {module: ModuleWithLessonsAndCourse, questions: QuestionWithFeedbackAndLesson[], forceSelectedQuestion: Question | null, ackSelectedQuestion: () => void, notesClicked: (question: QuestionWithFeedback, e: React.MouseEvent<HTMLButtonElement>) => void, fetchData: () => Promise<void>} ) {
 
-    const [ selectedQuestion, setSelectedQuestion ] = useState<QuestionWithFeedback | null>(null);
+    const [ selectedQuestionIndex, setSelectedQuestionIndex ] = useState<number | null>(null)
+    const selectedQuestion = selectedQuestionIndex ? questions[selectedQuestionIndex] : null
 
     const addToast = useContext(ToastContext);
 
     useEffect(() => {
         if (forceSelectedQuestion) {
-            const q = questions.filter(qu => qu.id === forceSelectedQuestion.id)[0];
-            setSelectedQuestion(q);
-            const el = document.getElementById(`question-${q.id}`);
+            const index = questions.findIndex(q => forceSelectedQuestion.id === q.id)
+            setSelectedQuestionIndex(index);
+            const el = document.getElementById(`question-${questions[index].id}`);
             el?.scrollIntoView({block: 'center'});
             ackSelectedQuestion();
         } 
     }, [forceSelectedQuestion]);
 
 
-    const editRow = async (question: QuestionWithFeedback) => {
-        setSelectedQuestion(question);
+    const editRow = async (index: number) => {
+        setSelectedQuestionIndex(index);
     };
 
     const deleteRow = async (question: QuestionWithFeedback) => {
@@ -110,7 +111,7 @@ export default function ScreenDisplay({ module, questions, forceSelectedQuestion
                                 <tbody>
                                 {questions.map((q, index) => {
                                     return (
-                                        <tr id={`question-${q.id}`} onClick={() => editRow(q)} key={q.id} className={cn({[styles.info]: selectedQuestion?.id === q.id})}>
+                                        <tr id={`question-${q.id}`} onClick={() => editRow(index)} key={q.id} className={cn({[styles.info]: selectedQuestion?.id === q.id})}>
                                             <td>{typeToIcon(q.type)}</td>
                                             <td>{q.type !== 'QUESTION' ? (null) : !q.recording ? <HiExclamationCircle style={{color: variables.themeRed, fontSize: '1.2rem'}} /> : <button onClick={e => {e.stopPropagation(); playTableRecording(q)}} className={styles.iconButton}><FaCheckCircle style={{color: variables.themeGreen}} /></button>}</td>
                                             <td style={{fontWeight: q.type === 'INFO' ? 'bold' : 'normal'}}>{stripInnerDelimiter(getMainVariant(q.target)) || q.infoTitle}</td>

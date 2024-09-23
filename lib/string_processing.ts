@@ -1,10 +1,10 @@
-const VARIANT_DELIMITER = '\n';
-const TOKEN_DELIMITER = ' ';
-const SYNONYM_DELIMITER = ';';
-const SYMBOLS_REGEX = /[.,\/#!\?$%\^&;:{}=\-_`~()]/g;
-const PUNCTUATION_REGEX = /[¿¡]/g;
-const INNER_TOKEN_DELIMITER = '*';
-const UNI_QUOTE = '\u2019'
+export const VARIANT_DELIMITER = '\n';
+export const TOKEN_DELIMITER = ' ';
+export const SYNONYM_DELIMITER = ';';
+export const SYMBOLS_REGEX = /[.,\/#!\?$%\^&;:{}=\-_`~()]/g;
+export const PUNCTUATION_REGEX = /[¿¡]/g;
+export const INNER_TOKEN_DELIMITER = '*';
+export const UNI_QUOTE = '\u2019'
 
 export type WordHintToken = {
     token: string;
@@ -64,3 +64,16 @@ export const stripInnerDelimiter = (sentence: string | null): string => {
 
     return sentence.replaceAll(INNER_TOKEN_DELIMITER, '');
 };
+
+export const splitStringIntoVariations: (input: string) => string[] = (input: string) => {
+    const bracketSections = input.match(/\[(.*?)\]/g);
+    if (!bracketSections || bracketSections?.length === 0) return [input];
+
+    const bracketVariations = bracketSections[0].slice(1, -1).split('/');
+    const variations = bracketVariations.map(v => {
+        const newInput = input.replace(/\[(.*?)\]/, v);
+        return splitStringIntoVariations(newInput).flat();
+    });
+
+    return variations.flat().map(v => v.replace(/ +/g, ' '));
+}
