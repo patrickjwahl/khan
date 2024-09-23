@@ -33,7 +33,12 @@ export default async function Module({ params }: { params: { id: string }}) {
 
     const moduleQuestions = await prisma.question.findMany({
         where: {
-            moduleId: id
+            moduleId: id,
+            type: {
+                not: {
+                    equals: "INFO"
+                }
+            }
         }
     });
 
