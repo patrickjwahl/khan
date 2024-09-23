@@ -1,6 +1,6 @@
 {
     "functions": {
-        "api/module/**/csv/route.ts": {
+        "app/api/module/**/csv/route.ts": {
             "maxDuration": 60
         }
     }
