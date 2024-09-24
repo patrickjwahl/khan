@@ -5,6 +5,7 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
+
 }
 
 .lessonMain {
@@ -259,6 +260,15 @@
     font-weight: bold;
     color: v.$background;
     padding-right: 0.4rem;
+}
+
+.livesDisplay {
+    display: flex;
+    justify-content: center;
+    gap: 0.8rem;
+    font-size: xx-large;
+    margin-bottom: -2.4rem;
+    color: red;
 }
 
 .studyContainer {

@@ -9,13 +9,15 @@ import { useSound } from 'use-sound';
 import ProgressBar from "@ramonak/react-progress-bar";
 import variables from '../../../v.module.scss';
 import { useRouter } from "next/navigation";
-import { COMPLETIONS_FOR_LESSON_PASS, EXP_FOR_ALREADY_FINISHED_LESSON, EXP_FOR_LESSON_COMPLETE } from "@/lib/settings";
+import { COMPLETIONS_FOR_LESSON_PASS, EXP_FOR_ALREADY_FINISHED_LESSON, EXP_FOR_LESSON_COMPLETE, TEST_LIVES } from "@/lib/settings";
 import { post } from "@/lib/api";
 import { normalizeAnswer } from "@/lib/string_processing";
 import ErrorScreen from "../../ErrorScreen";
+import cn from 'classnames'
+import { GoHeartFill } from "react-icons/go";
 
 export type ScreenState = 'hiding' | 'visible' | 'appearing' | 'invisible'
-export type LessonMode = 'lesson' | 'review'
+export type LessonMode = 'lesson' | 'practice' | 'test'
 export type ModuleWithCourse = Prisma.ModuleGetPayload<{include: {course: true}}>
 
 export default function LessonContent({ lesson = null, module, mode, questions, userCourse, numLessons }: { lesson?: Lesson | null, module: ModuleWithCourse, mode: LessonMode, questions: LessonQuestion[], userCourse: UserCourse | null, numLessons: number }) {
@@ -25,9 +27,11 @@ export default function LessonContent({ lesson = null, module, mode, questions, 
     const [ screens, setScreens ] = useState(questions);
     const [ currentQuestion, setCurrentQuestion ] = useState(0);
     const [ numCorrect, setNumCorrect ] = useState(0);
+    const [ lives, setLives ] = useState(TEST_LIVES)
 
     const [ correct, setCorrect ] = useState(false);
     const [ incorrect, setIncorrect ] = useState(false);
+    const [ failed, setFailed ] = useState(false);
 
     const [ userInput, setUserInput ] = useState('');
     const [ feedback, setFeedback ] = useState('');
@@ -82,10 +86,21 @@ export default function LessonContent({ lesson = null, module, mode, questions, 
     const handleIncorrect = () => {
         playWomp();
         setScreens([...screens, screens[currentQuestion]]);
-        setIncorrect(true);
+        if (mode === 'test' && lives == 1) {
+            setIncorrect(true)
+            setFailed(true);
+        } else {
+            setIncorrect(true)
+            if (mode === 'test') setLives(lives - 1)
+        }
     };
 
     const handleNext = async () => {
+
+        if (failed) {
+            window.location.href = `/learn/course/${module.course.id}`
+            return;
+        }
 
         if (currentQuestion === screens.length - 1) {
             if (mode === 'lesson' && lesson) {
@@ -111,10 +126,28 @@ export default function LessonContent({ lesson = null, module, mode, questions, 
                     const payload = {
                         date: new Date().toDateString(),
                         lessonId: lesson.id,
+                        moduleId: null,
+                        isTest: false
                     }
 
                     await post(`/api/userCourse/${userCourse.id}/completeLesson`, payload);
                 }
+            } else if (mode === 'practice' && userCourse) {
+                const payload = {
+                    date: new Date().toDateString(),
+                    lessonId: null,
+                    moduleId: module.id,
+                    isTest: false
+                }
+                await post(`/api/userCourse/${userCourse.id}/completeLesson`, payload)
+            } else if (mode === 'test' && userCourse) {
+                const payload = {
+                    date: new Date().toDateString(),
+                    lessonId: null,
+                    moduleId: module.id,
+                    isTest: true
+                }
+                await post(`/api/userCourse/${userCourse.id}/completeLesson`, payload)
             }
             playHorn();
             setTransitioning(true);
@@ -167,7 +200,7 @@ export default function LessonContent({ lesson = null, module, mode, questions, 
     }
 
     return (
-        <div className={styles.container}>
+        <div className={cn(styles.container, {[styles.test]: mode === 'test'})}>
             <div className={styles.lessonTopBar}>
                 <div>
                     <button onClick={() => router.push(`/learn/course/${module.courseId}`)}>EXIT</button>
@@ -176,13 +209,18 @@ export default function LessonContent({ lesson = null, module, mode, questions, 
                 
                 <ProgressBar customLabel={`${numCorrect}/${numQuestions}`} completed={Math.floor(numCorrect * 100 / numQuestions)} baseBgColor={variables.darkbackground} bgColor={variables.orange} labelClassName={styles.progressBarLabel} />
             </div>
+            {mode === 'test' && (
+                <div className={styles.livesDisplay}>
+                    {Array(lives).fill(null).map(_ => <span><GoHeartFill /></span>)}
+                </div>
+            )}
             <div className={styles.lessonMain}>
-                <LessonScreen language={module.course.language} question={screens[currentQuestion]} userInput={userInput} state={transitioning ? 'hiding' : 'visible'} onUserInput={setUserInput} onUserSubmit={handleButtonClick} correct={correct} incorrect={incorrect} feedback={feedback} />
-                {screens[currentQuestion + 1] && <LessonScreen language={module.course.language} question={screens[currentQuestion + 1]} userInput={userInput} onUserInput={setUserInput} onUserSubmit={handleButtonClick} state={transitioning ? 'appearing' : 'invisible'} />}
+                <LessonScreen language={module.course.language} question={screens[currentQuestion]} userInput={userInput} state={transitioning ? 'hiding' : 'visible'} onUserInput={setUserInput} onUserSubmit={handleButtonClick} correct={correct} incorrect={incorrect} failed={failed} feedback={feedback} isTest={mode === 'test'} />
+                {screens[currentQuestion + 1] && <LessonScreen language={module.course.language} question={screens[currentQuestion + 1]} userInput={userInput} onUserInput={setUserInput} onUserSubmit={handleButtonClick} state={transitioning ? 'appearing' : 'invisible'} isTest={mode === 'test'} />}
             </div>
             <div className={styles.lessonBottomBar}>
-                <button onClick={handleIncorrect} style={{visibility: incorrect || correct || screens[currentQuestion].type === 'INFO' ? 'hidden' : 'visible'}} className="orange">SKIP</button>
-                <button className="blue" onClick={handleButtonClick}>{correct || incorrect ? (currentQuestion === screens.length - 1 ? `FINISH LESSON${exp}` : 'NEXT QUESTION') : screens[currentQuestion].type === 'INFO' ? (currentQuestion === screens.length - 1 ? `FINISH LESSON${exp}` : 'CONTINUE') : 'SUBMIT'}</button>
+                {!(mode === 'test') && <button onClick={handleIncorrect} style={{visibility: incorrect || correct || screens[currentQuestion].type === 'INFO' ? 'hidden' : 'visible'}} className="orange">SKIP</button>}
+                <button className="blue" onClick={handleButtonClick}>{failed ? 'KEEP PRACTICING' : (correct || incorrect ? (currentQuestion === screens.length - 1 ? `FINISH LESSON${exp}` : 'NEXT QUESTION') : screens[currentQuestion].type === 'INFO' ? (currentQuestion === screens.length - 1 ? `FINISH LESSON${exp}` : 'CONTINUE') : 'SUBMIT')}</button>
             </div>
         </div>
     );

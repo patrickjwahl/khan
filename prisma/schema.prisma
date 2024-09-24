@@ -166,6 +166,7 @@ model UserCourse {
     exp               Exp[]
     lessonId          Int?      @map("lesson_id")
     moduleId          Int       @map("module_id")
+    onTest            Boolean   @default(false)
 
     @@map("user_course")
 }

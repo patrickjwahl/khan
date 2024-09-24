@@ -8,6 +8,8 @@ export async function POST(request: NextRequest, context: { params: {id: string}
     const requestData = await request.json();
 
     const lessonId = requestData.lessonId;
+    const moduleId = requestData.moduleId
+    const isTest: boolean = requestData.isTest
     const date = requestData.date;
     const id = parseInt(context.params.id);
 
@@ -45,18 +47,35 @@ export async function POST(request: NextRequest, context: { params: {id: string}
         throw new Error("User not found!");
     }
 
-    const lesson = await prisma.lesson.findFirst({
-        where: {
-            id: lessonId,
-        },
-        include: {
-            module: true
+    let module, lesson;
+    if (lessonId != null) {
+        lesson = await prisma.lesson.findFirst({
+            where: {
+                id: lessonId,
+            },
+            include: {
+                module: true
+            }
+        });
+    
+        if (!lesson) return NextResponse.json({code: 'NO_SUCH_LESSON'});
+    
+        if (!lesson?.module.published) return NextResponse.json({code: 'OK'});
+
+        module = lesson.module
+    } else if (moduleId != null) {
+        module = await prisma.module.findFirst({
+            where: {
+                id: moduleId
+            }
+        })
+
+        if (!module) {
+            return NextResponse.json({code: 'IMPROPER_REQUEST'})
         }
-    });
-
-    if (!lesson) return NextResponse.json({code: 'NO_SUCH_LESSON'});
-
-    if (!lesson?.module.published) return NextResponse.json({code: 'OK'});
+    } else {
+        return NextResponse.json({code: 'IMPROPER_REQUEST'})
+    }
 
     const lastLessonDate = new Date(user.lastLesson || 'Thu Jan 01 1970');
     const now = new Date(date);
@@ -85,92 +104,113 @@ export async function POST(request: NextRequest, context: { params: {id: string}
         }
     });
 
-    if (lessonId !== userCourse.lessonId || lesson.moduleId !== userCourse.moduleId) {
+    if (!isTest && (lessonId !== userCourse.lessonId || module.id !== userCourse.moduleId)) {
         // Not the user's current lesson, give them credit for trying
         await addExp(EXP_FOR_ALREADY_FINISHED_LESSON, date, userCourse.id);
         return NextResponse.json({code: 'OK'});
     }
 
-    if (userCourse.lessonCompletions < COMPLETIONS_FOR_LESSON_PASS - 1) {
-        // hasn't passed the lesson, just update the number of completions
-
-        await prisma.userCourse.update({
+    if (isTest) {
+        // user passed a test, so we're on to the next module
+        const newModule = await prisma.module.findFirst({
             where: {
-                id: id
-            },
-            data: {
-                lessonCompletions: userCourse.lessonCompletions + 1
-            }
-        });
-
-        await addExp(EXP_FOR_LESSON_COMPLETE, date, userCourse.id);
-    } else {
-        const newLesson = await prisma.lesson.findFirst({
-            where: {
-                moduleId: userCourse.moduleId,
+                published: true,
+                courseId: userCourse.courseId,
                 index: {
-                    gt: lesson.index
+                    gt: module.index
                 }
             },
             orderBy: {
                 index: 'asc'
+            },
+            include: {
+                lessons: {
+                    orderBy: {
+                        index: 'asc'
+                    }
+                }
             }
         });
 
-        if (!newLesson) {
-            // We're out of lessons, so we move to the next module
-            const newModule = await prisma.module.findFirst({
-                where: {
-                    published: true,
-                    courseId: userCourse.courseId,
-                    index: {
-                        gt: lesson.module.index
-                    }
-                },
-                orderBy: {
-                    index: 'asc'
-                },
-                include: {
-                    lessons: {
-                        orderBy: {
-                            index: 'asc'
-                        }
-                    }
-                }
-            });
-
-            if (!newModule) {
-                // out of modules, user passes the course
-                return NextResponse.json({code: 'THATS_ALL_FOLKS'});
-            } else {
-                await prisma.userCourse.update({
-                    where: {
-                        id: userCourse.id
-                    },
-                    data: {
-                        moduleId: newModule.id,
-                        lessonId: newModule.lessons[0].id,
-                        lessonCompletions: 0
-                    }
-                });
-
-                await addExp(EXP_FOR_MODULE_COMPLETE, date, userCourse.id);
-            }
+        if (!newModule) {
+            // out of modules, user passes the course
+            return NextResponse.json({code: 'THATS_ALL_FOLKS'});
         } else {
-            // move to next lesson
+
             await prisma.userCourse.update({
                 where: {
                     id: userCourse.id
                 },
                 data: {
-                    lessonId: newLesson.id,
-                    lessonCompletions: 0
+                    moduleId: newModule.id,
+                    lessonId: newModule.lessons[0].id,
+                    lessonCompletions: 0,
+                    onTest: false
                 }
             });
 
+            await addExp(EXP_FOR_MODULE_COMPLETE, date, userCourse.id);
+        }
+    } else if (lesson) {
+        // User passed a lesson
+    
+        if (userCourse.lessonCompletions < COMPLETIONS_FOR_LESSON_PASS - 1) {
+            // hasn't passed the lesson, just update the number of completions
+    
+            await prisma.userCourse.update({
+                where: {
+                    id: id
+                },
+                data: {
+                    lessonCompletions: userCourse.lessonCompletions + 1
+                }
+            });
+    
             await addExp(EXP_FOR_LESSON_COMPLETE, date, userCourse.id);
+        } else {
+            const newLesson = await prisma.lesson.findFirst({
+                where: {
+                    moduleId: userCourse.moduleId,
+                    index: {
+                        gt: lesson.index
+                    }
+                },
+                orderBy: {
+                    index: 'asc'
+                }
+            });
+    
+            if (!newLesson) {
+                // We're out of lessons, so we move to the test
+
+                await prisma.userCourse.update({
+                    where: {
+                        id: userCourse.id
+                    },
+                    data: {
+                        onTest: true,
+                        lessonCompletions: userCourse.lessonCompletions + 1
+                    }
+                })
+                await addExp(EXP_FOR_LESSON_COMPLETE, date, userCourse.id)
+
+            } else {
+                // move to next lesson
+                await prisma.userCourse.update({
+                    where: {
+                        id: userCourse.id
+                    },
+                    data: {
+                        lessonId: newLesson.id,
+                        lessonCompletions: 0
+                    }
+                });
+    
+                await addExp(EXP_FOR_LESSON_COMPLETE, date, userCourse.id);
+            }
         }
     }
+
 
     return NextResponse.json({code: 'OK'});
 }

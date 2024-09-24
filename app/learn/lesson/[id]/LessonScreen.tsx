@@ -118,13 +118,15 @@ export const setUpWordHintListeners = (question: LessonQuestion) => {
     }
 }
 
-export default function LessonScreen({ question, userInput, onUserInput, onUserSubmit, state, language, correct, incorrect, feedback}: { question: LessonQuestion, userInput: string, onUserInput: (value: string) => void, onUserSubmit: () => void, state: ScreenState, language: string, correct?: boolean, incorrect?: boolean, feedback?: string}) {
+export default function LessonScreen({ question, userInput, onUserInput, onUserSubmit, state, language, correct, incorrect, failed, feedback, isTest = false }: { question: LessonQuestion, userInput: string, onUserInput: (value: string) => void, onUserSubmit: () => void, state: ScreenState, language: string, correct?: boolean, incorrect?: boolean, failed?: boolean, feedback?: string, isTest?: boolean }) {
 
     const questionWords = getQuestionTokens(question.question);
     const [ hintIndex, setHintIndex ] = useState(-1);
     const [ audioPlayed, setAudioPlayed ] = useState(false);
     const [ keyboardLayout, setKeyboardLayout ] = useState<'default' | 'shift'>('default');
     const [ isKeyboardLocked, setKeyboardLocked ] = useState<boolean>(false);
+
+    const explanationString = `"${stripInnerDelimiter(question.question)}" ${question.questionType === 'forward' ? 'translates to' : 'means'} "${stripInnerDelimiter(question.answers[0])}"`
 
     useEffect(() => {
         if (state === 'visible' && question.recording && question.questionType !== 'forward' && !audioPlayed) {
@@ -138,11 +140,11 @@ export default function LessonScreen({ question, userInput, onUserInput, onUserS
 
     // Show hint and play sound for vocab words and sentences
     useEffect(() => {
-        return setUpSentenceHintListeners(question)
+        if (!isTest) return setUpSentenceHintListeners(question)
     }, [question])
 
     useEffect(() => {
-        return setUpWordHintListeners(question)
+        if (!isTest) return setUpWordHintListeners(question)
     }, [question])
 
     const keyboardPressed = (input: string) => {
@@ -195,7 +197,7 @@ export default function LessonScreen({ question, userInput, onUserInput, onUserS
                                     <div key={index}>
                                         <div data-testid='questionword' className={cn(styles.questionToken, {[styles.noSpace]: hint.noSpace})} onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>
                                             {questionWords && questionWords[index]}
-                                            {hint.wordEntity &&
+                                            {(hint.wordEntity && !isTest) &&
                                             <div className={cn(styles.hintContainer, {[styles.visible]: index === hintIndex})}>
                                                 <div>{hint.wordEntity.native}</div>
                                                 <div>{hint.wordEntity.target}</div>
@@ -214,7 +216,7 @@ export default function LessonScreen({ question, userInput, onUserInput, onUserS
                                     <div key={index}>
                                         <div data-testid='questionword' className={cn(styles.questionToken, {[styles.noSpace]: hint.noSpace})} onMouseEnter={() => setHintIndex(index)} onMouseLeave={() => setHintIndex(-1)}>
                                             {questionWords && questionWords[index]}
-                                            {hint.wordEntity &&
+                                            {(hint.wordEntity && !isTest) &&
                                             <div className={cn(styles.hintContainer, {[styles.visible]: index === hintIndex})}>
                                                 <div>{hint.wordEntity.target}</div>
                                                 <div>{hint.wordEntity.native}</div>
@@ -231,7 +233,8 @@ export default function LessonScreen({ question, userInput, onUserInput, onUserS
                     <div className={styles.border} style={{visibility: correct || incorrect ? 'visible': 'hidden'}}></div>
                     <div className={cn(styles.answerContainer, {[styles.visible]: correct || incorrect})}>
                         <div data-testid="result" className={cn(styles.result, {[styles.wrong]: incorrect})}>{correct ? 'GREAT JOB!' : 'OOPS...'}</div>
-                        <div className={styles.answer}>"{stripInnerDelimiter(question.question)}" {question.questionType === 'forward' ? 'translates to' : 'means'} "{stripInnerDelimiter(question.answers[0])}"</div>
+                        {!isTest ? <div className={styles.answer}>{explanationString}</div> : (null)}
+                        {isTest ? (failed ? <div className={styles.answer}>You have failed the Khan{"'"}s challenge... </div> : correct ? explanationString : 'Not quite...') : (null)}
                         {feedback && <div className={styles.answer}><b>{feedback}</b></div>}
                     </div>
                     <Keyboard onKeyPress={keyboardPressed} layout={keyboardLayoutLib.layout} layoutName={keyboardLayout} />

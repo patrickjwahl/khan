@@ -23,7 +23,7 @@ export type QuestionWithFeedback = Prisma.QuestionGetPayload<{include: {feedback
 export default function ScreenDisplay({ module, questions, forceSelectedQuestion, ackSelectedQuestion, notesClicked, fetchData }: {module: ModuleWithLessonsAndCourse, questions: QuestionWithFeedbackAndLesson[], forceSelectedQuestion: Question | null, ackSelectedQuestion: () => void, notesClicked: (question: QuestionWithFeedback, e: React.MouseEvent<HTMLButtonElement>) => void, fetchData: () => Promise<void>} ) {
 
     const [ selectedQuestionIndex, setSelectedQuestionIndex ] = useState<number | null>(null)
-    const selectedQuestion = selectedQuestionIndex ? questions[selectedQuestionIndex] : null
+    const selectedQuestion = selectedQuestionIndex !== null ? questions[selectedQuestionIndex] : null
 
     const addToast = useContext(ToastContext);
 

@@ -6,13 +6,15 @@ import variables from '../../../v.module.scss';
 import cn from 'classnames';
 import { useState, useEffect } from 'react';
 
-import { Course, Prisma, UserCourse } from "@prisma/client";
+import { Course, Lesson, Module, Prisma, UserCourse } from "@prisma/client";
 import Link from 'next/link';
 import ProgressBar from '@ramonak/react-progress-bar';
 import { COMPLETIONS_FOR_LESSON_PASS } from '@/lib/settings';
 import Navbar from '../../Navbar';
+import { ModuleWithLessonsAndCourse } from '@/app/admin/module/[id]/ModuleDashboard';
 
 export type CourseWithModulesAndLessons = Prisma.CourseGetPayload<{include: {modules: {include: {lessons: true}}}}>;
+type ModuleWithLessons = Prisma.ModuleGetPayload<{include: {lessons: true}}>
 
 export default function CourseContent({ course, moduleIndex: initModuleIndex, lessonIndex: initLessonIndex, lessonCompletions: initLessonCompletions }: { course: CourseWithModulesAndLessons, moduleIndex: number, lessonIndex: number, lessonCompletions: number }) {
 
@@ -50,6 +52,19 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
     //     return (null);
     // }
 
+    const isLessonUnlocked = (queryModule: Module, queryLesson: Lesson): boolean => {
+        return !course.published || !queryModule.published || moduleIndex > queryModule.index || (moduleIndex === queryModule.index && lessonIndex >= queryLesson.index)
+    }
+
+    const isTestUnlocked = (queryModule: ModuleWithLessons): boolean => {
+        const maxLessonIndex = Math.max(...queryModule.lessons.map(l => l.index))
+        return moduleIndex > queryModule.index || (moduleIndex === queryModule.index && lessonIndex === maxLessonIndex && lessonCompletions == COMPLETIONS_FOR_LESSON_PASS) || !queryModule.published || !course.published
+    }
+
+    const isModuleUnlocked = (queryModule: Module): boolean => {
+        return !course.published || !queryModule.published || moduleIndex >= queryModule.index
+    }
+
     return (
         <div className={styles.container}>
             <div className={styles.courseHeader}>
@@ -65,7 +80,7 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
                 {course.modules.map(module => {
                     return (
                     <div key={module.id} className={styles.moduleContainer}>
-                        <div id={`module-${module.id}`} className={styles.moduleHeader}>
+                        <div id={`module-${module.id}`} className={cn(styles.moduleHeader, {[styles.disabled]: !isModuleUnlocked(module)})}>
                             {module.image && 
                             <div className={styles.moduleImageContainer}>
                                 <Image src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN}/images/${module.image}`} alt={`${module.title} icon`} fill />
@@ -84,13 +99,20 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
                             {module.lessons.map(lesson => {
                                 return (
                                     <a key={lesson.id} href={`/learn/lesson/${lesson.id}`}>
-                                        <button onClick={e => {if ((moduleIndex < module.index || (module.index === moduleIndex && lessonIndex < lesson.index)) && course.published && module.published) e.preventDefault()}} key={lesson.id} id={`${module.id}-${lesson.id}`} className={cn(styles.lessonButton, 'blue', {[styles.current]: module.index === moduleIndex && lesson.index === lessonIndex, [styles.disabled]: (module.published && course.published && (module.index > moduleIndex || (module.index === moduleIndex && lesson.index > lessonIndex)))})}>
+                                        <button onClick={e => {if (!isLessonUnlocked(module, lesson)) e.preventDefault()}} key={lesson.id} id={`${module.id}-${lesson.id}`} className={cn(styles.lessonButton, 'blue', {[styles.current]: module.index === moduleIndex && lesson.index === lessonIndex, [styles.disabled]: !isLessonUnlocked(module, lesson)})}>
                                             {lesson.title.toUpperCase()}
                                             {module.index === moduleIndex && lesson.index === lessonIndex && <ProgressBar completed={Math.floor(lessonCompletions * 100 / COMPLETIONS_FOR_LESSON_PASS)} isLabelVisible={false} bgColor={variables.gold} height='10px' barContainerClassName={styles.progressBar} className={styles.progressBarContainer}/>}
                                         </button>
                                     </a>
                                 );
                             })}
+                            <div className={styles.testButtonWrapper}>
+                                <a href={`/learn/module/${module.id}/test`}>
+                                    <button className={cn(styles.testButton, {[styles.disabled]: !isTestUnlocked(module)})}>
+                                        <span>CHALLENGE</span>
+                                    </button>
+                                </a>
+                            </div>
                         </div>
                     </div>
                     );

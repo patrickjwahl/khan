@@ -10,6 +10,19 @@
     }
 }
 
+.moduleContainer {
+    &:nth-child(even) {
+        .moduleHeader {
+            background-color: v.$pink;
+        }
+    }
+    &:nth-child(odd) {
+        .moduleHeader {
+            background-color: v.$blue;
+        }
+    }
+}
+
 .moduleHeader {
     display: flex;
     gap: 1.6rem;
@@ -37,6 +50,14 @@
             flex-direction: row;
             justify-content: center;
             gap: 0.8rem;
+        }
+    }
+
+    &.disabled {
+        background-color: v.$lightforeground !important;
+
+        button {
+            display: none;
         }
     }
 }
@@ -97,6 +118,16 @@
     }
 }
 
+@keyframes wiggleVertical {
+    from {
+        transform: translateY(-4px);
+    }
+
+    to { 
+        transform: translateY(4px);
+    }
+}
+
 .moduleBody {
     display: flex;
     flex-direction: column;
@@ -145,6 +176,35 @@
 
     &.disabled {
         background-color: v.$lightforeground;
+    }
+}
+
+.testButton {
+    width: 150px;
+    height: 120px;
+    animation: wiggleVertical 1s ease-in-out infinite alternate-reverse;
+    background-color: v.$gold;
+    color: v.$darkgold;
+    border-radius: 0;
+    &.disabled {
+        background-color: v.$lightforeground;
+        color: v.$background;
+    }
+    clip-path: polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%);
+    >:first-child {
+        position: relative;
+        top: -5px;
+    }
+    margin-bottom: 1.2rem;
+    margin-top: 0.8rem;
+}
+
+.testButtonWrapper {
+    animation: none !important;
+    filter: drop-shadow(0 3px 0 v.$darkgold);
+
+    &:active {
+        filter: none;
     }
 }
 

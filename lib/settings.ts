@@ -6,3 +6,5 @@ export const VOCAB_WORD_REGEX = /\{(.*?)\}/g;
 export const COMMENT_REGEX = /[^\S\r\n]*\/\/(.*?)(\n|\<(.*?)\>)/gm
 export const SENTENCE_REGEX = /\#\[([0-9]+)\]/gm
 export const MAX_QUESTIONS_PER_LESSON = 4;
+export const MAX_QUESTIONS_PER_TEST = 20;
+export const TEST_LIVES = 3;

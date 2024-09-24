@@ -7,6 +7,11 @@ import ErrorScreen from "../../ErrorScreen";
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
 
+export async function generateMetadata({ params }: {params: {id: string}}) {
+    const course = await prisma.course.findFirst({where: {id: parseInt(params.id)}});
+    return {title: `Learn ${course?.language} | Genghis Khan Academy`};
+}
+
 export default async function Course({ params }: { params: { id: string }}) {
 
     const courseId = parseInt(params.id);
