@@ -83,7 +83,11 @@ export default function Dashboard({ user, courses }: { user: User, courses: Cour
     return (
         <main className={styles.container}>
             <Breadcrumbs trail={breadcrumbs} />
-            <h2>MY DASHBOARD</h2>
+            <div className={styles.adminTitleContainer}>
+                <div>GENGHIS KHAN ACADEMY</div>
+                <div>|</div>
+                <div>COURSE CREATOR</div>
+            </div>
             <div className={styles.contentContainer}>
                 <h5>MY COURSES</h5>
                 <div className={styles.courseList}>

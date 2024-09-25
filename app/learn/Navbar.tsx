@@ -19,6 +19,7 @@ export default function Navbar({ isCourse = false }: { isCourse?: boolean }) {
             <Link href='/learn/course'><button className={current === 'course' ? 'purple' : 'blue'}>COURSE</button></Link>
             <Link href='/learn/profile/friends'><button className={current === 'friends' ? 'purple' : 'blue'}>FRIENDS</button></Link>
             <Link href='/learn/profile'><button className={current === 'profile' ? 'purple' : 'blue'}>PROFILE</button></Link>
+            <a href='/admin'><button className='orange'>COURSE CREATOR</button></a>
         </div>
     );
 }

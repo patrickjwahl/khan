@@ -13,6 +13,7 @@
 }
 
 .moduleContainer {
+    padding: 0 2.4rem;
     &:nth-child(even) {
         .moduleHeader {
             background-color: v.$pink;
@@ -53,6 +54,7 @@
         flex-direction: column;
         width: 100%;
         overflow-y: scroll;
+        padding: 0 2.4rem;
 
         li {
             font-size: larger;
@@ -117,7 +119,7 @@
 
 .moduleImageContainer {
     height: 100px;
-    width: 100px;
+    min-width: 100px;
     position: relative;
 
     img {
@@ -127,10 +129,10 @@
 }
 
 .courseHeader {
+
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    gap: 0.8rem;
     position: sticky;
     top: 0;
     z-index: 300;
@@ -138,8 +140,24 @@
     padding: 1.6rem;
     background-color: v.$background;
 
+    > div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1.6rem;
+
+        >div:first-child {
+            font-size: large;
+            letter-spacing: 0.4rem;
+        }
+    }
+
     h1 {
         margin: 0;
+        font-size: large;
+        font-weight: normal;
+        letter-spacing: 0.4rem;
+        font-style: italic;
     }
 
     &::after {
@@ -459,9 +477,9 @@
 }
 
 .previewModeBanner {
-    margin-bottom: 3.2rem;
     background-color: v.$darkorange;
     color: v.$background;
     padding: 0.4rem;
     border-radius: 5px;
+    display: inline-block;
 }

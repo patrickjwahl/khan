@@ -4,7 +4,7 @@ import styles from '../../Learn.module.scss';
 import Xarrow, { Xwrapper, useXarrow } from 'react-xarrows';
 import variables from '../../../v.module.scss';
 import cn from 'classnames';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, UIEvent } from 'react';
 
 import { Course, Lesson, Module, Prisma, UserCourse } from "@prisma/client";
 import Link from 'next/link';
@@ -21,7 +21,9 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
     const [ moduleIndex, setModuleIndex ] = useState(initModuleIndex);
     const [ lessonIndex, setLessonIndex ] = useState(initLessonIndex);
     const [ lessonCompletions, setLessonCompletions ] = useState(initLessonCompletions);
-    const [ activeModule, setActiveModule ] = useState(0);
+    const [ activeModule, setActiveModule ] = useState(0)
+    const [ isDebouncing, setIsDebouncing ] = useState(false)
+    const [ isProgramScrolling, setIsProgramScrolling ] = useState(false)
 
     useEffect(() => {
         if (moduleIndex === -1) {
@@ -38,15 +40,61 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
             if (anchorSplit.length > 1) {
                 const anchorModule = parseInt(anchorSplit[1])
                 setActiveModule(anchorModule)
+                return
             }
         }
+        const matchingModules = course.modules.filter(m => m.index === moduleIndex)
+        if (matchingModules.length > 0) {
+            scrollModuleIntoView(matchingModules[0].id)
+        }
+        
     }, []);
+
+    useEffect(() => {
+        if (!isProgramScrolling) {
+            const interval = setInterval(() => {
+                checkActiveModule()
+            }, 200)
+            
+            return () => {clearInterval(interval)}
+        }
+    }, [isProgramScrolling])
+
+    const scrollModuleIntoView = (moduleId: number) => {
+        setIsProgramScrolling(true)
+        setActiveModule(moduleId)
+        const moduleView = document.getElementById(`module-${moduleId}`);
+        moduleView?.scrollIntoView({behavior: 'smooth'})
+        setTimeout(() => {
+            setIsProgramScrolling(false)
+        }, 1300)
+    }
 
     const changeActiveModule = (moduleId: number) => {
         return () => {
-            setActiveModule(moduleId)
-            const moduleView = document.getElementById(`module-${moduleId}`);
-            moduleView?.scrollIntoView({behavior: 'smooth'})
+            scrollModuleIntoView(moduleId)
+        }
+    }
+
+    const checkActiveModule = () => {
+        const moduleHeaders = Array.from(document.getElementsByClassName('moduleHeader'))
+        moduleHeaders.forEach(header => {
+            const position = header.getBoundingClientRect().top / document.documentElement.clientHeight
+            const moduleId = parseInt((header as HTMLElement).dataset.moduleId || activeModule.toString())
+            if (position > 0.05 && position < 0.5 && activeModule != moduleId) {
+                setActiveModule(moduleId)
+            }
+        })
+    }
+
+    const handleCourseScroll = () => {
+        if (!isDebouncing && !isProgramScrolling) {
+            checkActiveModule()
+
+            setIsDebouncing(true)
+            setTimeout(() => {
+                setIsDebouncing(false)
+            }, 50)
         }
     }
 
@@ -88,15 +136,18 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
     return (
         <div className={styles.container}>
             <div className={styles.courseHeader}>
-                <h1>{course.language.toUpperCase()}</h1>
-                { course.image && (
-                <div className={styles.languageImageContainer}>
-                    <Image src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN}/images/${course.image}`} alt='Language icon' fill />
-                </div>     
-                )}
+                <div>
+                    <div>GENGHIS KHAN ACADEMY</div>
+                    { course.image && (
+                        <div className={styles.languageImageContainer}>
+                            <Image src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN}/images/${course.image}`} alt='Language icon' fill />
+                        </div>     
+                    )}
+                    <h1>{course.language.toUpperCase()}</h1>
+                </div>
                 {!course.published && <h5 className={styles.previewModeBanner}>This course is in preview mode!</h5>}
             </div>
-            <div className={styles.courseBody}>
+            <div className={styles.courseBody} onScroll={() => handleCourseScroll()}>
                 <div className={styles.courseIndex}>
                     <ul>
                         {course.modules.map(module => (
@@ -108,7 +159,7 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
                     {course.modules.map(module => {
                         return (
                         <div key={module.id} className={styles.moduleContainer}>
-                            <div id={`module-${module.id}`} className={cn(styles.moduleHeader, {[styles.disabled]: !isModuleUnlocked(module)})}>
+                            <div data-module-id={module.id} id={`module-${module.id}`} className={cn('moduleHeader', styles.moduleHeader, {[styles.disabled]: !isModuleUnlocked(module)})}>
                                 {module.image && 
                                 <div className={styles.moduleImageContainer}>
                                     <Image src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN}/images/${module.image}`} alt={`${module.title} icon`} fill />

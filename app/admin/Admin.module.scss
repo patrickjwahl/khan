@@ -118,6 +118,19 @@
     }
 }
 
+.adminTitleContainer {
+    display: flex;
+    gap: 1.2rem;
+    font-size: x-large;
+    letter-spacing: 0.4rem;
+    font-weight: 300;
+    margin-bottom: 1.2rem;
+
+    >div:last-child {
+        font-style: italic;
+    }
+}
+
 .modal {
     width: 100%;
     height: 100%;
@@ -416,10 +429,32 @@
 }
 
 .breadcrumbsContainer {
+
+    >div:first-child {
+        display: flex;
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    >a {
+        height: 100%;
+        display: block;
+        background-color: variables.$theme-red;
+        padding: 1rem;
+        
+        &:hover {
+            filter: brightness(110%);
+        }
+
+        &:active {
+            filter: brightness(80%);
+        }
+    }
+
     display: flex;
+    justify-content: space-between;
+    align-items: stretch;
     width: 100%;
-    padding: 1rem;
-    gap: 1rem;
     margin-bottom: 2rem;
     background-color: variables.$theme-blue;
     color: variables.$background-color;

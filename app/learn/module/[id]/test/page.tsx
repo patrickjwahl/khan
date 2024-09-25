@@ -85,7 +85,7 @@ export default async function Lesson({ params }: { params: { id: string }}) {
         return <ErrorScreen error="You're not subscribed to this course!" />
     }
 
-    if (!userCourse.onTest && module.course.published && module.published ) {
+    if (((userCourse.currentLesson?.module.index || 0) <= module.index && !userCourse.onTest) && module.course.published && module.published ) {
         return <ErrorScreen error="You haven't unlocked this yet!" />
     }
 
