@@ -21,6 +21,7 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
     const [ moduleIndex, setModuleIndex ] = useState(initModuleIndex);
     const [ lessonIndex, setLessonIndex ] = useState(initLessonIndex);
     const [ lessonCompletions, setLessonCompletions ] = useState(initLessonCompletions);
+    const [ activeModule, setActiveModule ] = useState(0);
 
     useEffect(() => {
         if (moduleIndex === -1) {
@@ -29,6 +30,25 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
             setLessonCompletions(JSON.parse(localStorage.getItem('guestSession') || '{}')[course.id]?.lessonCompletions || 0);
         }
     }, []);
+
+    useEffect(() => {
+        const urlSplit = document.URL.split('#')
+        if (urlSplit.length > 1) {
+            const anchorSplit = urlSplit[1].split('-')
+            if (anchorSplit.length > 1) {
+                const anchorModule = parseInt(anchorSplit[1])
+                setActiveModule(anchorModule)
+            }
+        }
+    }, []);
+
+    const changeActiveModule = (moduleId: number) => {
+        return () => {
+            setActiveModule(moduleId)
+            const moduleView = document.getElementById(`module-${moduleId}`);
+            moduleView?.scrollIntoView({behavior: 'smooth'})
+        }
+    }
 
     const arrows = course.modules.map((module, mIndex) => {
 
@@ -74,53 +94,63 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
                     <Image src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN}/images/${course.image}`} alt='Language icon' fill />
                 </div>     
                 )}
+                {!course.published && <h5 className={styles.previewModeBanner}>This course is in preview mode!</h5>}
             </div>
-            {!course.published && <h5 className={styles.previewModeBanner}>This course is in preview mode!</h5>}
-            <div className={styles.moduleList}>
-                {course.modules.map(module => {
-                    return (
-                    <div key={module.id} className={styles.moduleContainer}>
-                        <div id={`module-${module.id}`} className={cn(styles.moduleHeader, {[styles.disabled]: !isModuleUnlocked(module)})}>
-                            {module.image && 
-                            <div className={styles.moduleImageContainer}>
-                                <Image src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN}/images/${module.image}`} alt={`${module.title} icon`} fill />
-                            </div>
-                            }
-                            <div>
-                                <h4>{module.title}</h4>
-                                <div>
-                                    <a href={`/learn/module/${module.id}/study`}><button className='orange'>STUDY</button></a>
-                                    <a href={`/learn/module/${module.id}/practice`}><button className='purple'>PRACTICE</button></a>
+            <div className={styles.courseBody}>
+                <div className={styles.courseIndex}>
+                    <ul>
+                        {course.modules.map(module => (
+                            <li className={cn({[styles.selected]: activeModule === module.id})} onClick={changeActiveModule(module.id)}>{module.title}</li>
+                        ))}
+                    </ul>
+                </div>
+                <div className={styles.moduleList}>
+                    {course.modules.map(module => {
+                        return (
+                        <div key={module.id} className={styles.moduleContainer}>
+                            <div id={`module-${module.id}`} className={cn(styles.moduleHeader, {[styles.disabled]: !isModuleUnlocked(module)})}>
+                                {module.image && 
+                                <div className={styles.moduleImageContainer}>
+                                    <Image src={`${process.env.NEXT_PUBLIC_CLOUDFRONT_DOMAIN}/images/${module.image}`} alt={`${module.title} icon`} fill />
                                 </div>
-                                {!module.published && <div>This module is in preview mode!</div>}
+                                }
+                                <div>
+                                    <div className={styles.moduleIndexLabel}>MODULE {module.index + 1}</div>
+                                    <h4>{module.title}</h4>
+                                    <div className={styles.headerButtonContainer}>
+                                        <a href={`/learn/module/${module.id}/study`}><button className='orange'>STUDY</button></a>
+                                        <a href={`/learn/module/${module.id}/practice`}><button className='purple'>PRACTICE</button></a>
+                                    </div>
+                                    {!module.published && <div>This module is in preview mode!</div>}
+                                </div>
                             </div>
-                        </div>
-                        <div className={styles.moduleBody}>
-                            {module.lessons.map(lesson => {
-                                return (
-                                    <a key={lesson.id} href={`/learn/lesson/${lesson.id}`}>
-                                        <button onClick={e => {if (!isLessonUnlocked(module, lesson)) e.preventDefault()}} key={lesson.id} id={`${module.id}-${lesson.id}`} className={cn(styles.lessonButton, 'blue', {[styles.current]: module.index === moduleIndex && lesson.index === lessonIndex, [styles.disabled]: !isLessonUnlocked(module, lesson)})}>
-                                            {lesson.title.toUpperCase()}
-                                            {module.index === moduleIndex && lesson.index === lessonIndex && <ProgressBar completed={Math.floor(lessonCompletions * 100 / COMPLETIONS_FOR_LESSON_PASS)} isLabelVisible={false} bgColor={variables.gold} height='10px' barContainerClassName={styles.progressBar} className={styles.progressBarContainer}/>}
+                            <div className={styles.moduleBody}>
+                                {module.lessons.map(lesson => {
+                                    return (
+                                        <a key={lesson.id} href={`/learn/lesson/${lesson.id}`}>
+                                            <button onClick={e => {if (!isLessonUnlocked(module, lesson)) e.preventDefault()}} key={lesson.id} id={`${module.id}-${lesson.id}`} className={cn(styles.lessonButton, 'blue', {[styles.current]: module.index === moduleIndex && lesson.index === lessonIndex, [styles.disabled]: !isLessonUnlocked(module, lesson)})}>
+                                                {lesson.title.toUpperCase()}
+                                                {module.index === moduleIndex && lesson.index === lessonIndex && <ProgressBar completed={Math.floor(lessonCompletions * 100 / COMPLETIONS_FOR_LESSON_PASS)} isLabelVisible={false} bgColor={variables.gold} height='10px' barContainerClassName={styles.progressBar} className={styles.progressBarContainer}/>}
+                                            </button>
+                                        </a>
+                                    );
+                                })}
+                                <div className={styles.testButtonWrapper}>
+                                    <a href={`/learn/module/${module.id}/test`}>
+                                        <button onClick={e => {if (!isTestUnlocked(module)) e.preventDefault()}} className={cn(styles.testButton, {[styles.disabled]: !isTestUnlocked(module)})}>
+                                            <span>CHALLENGE</span>
                                         </button>
                                     </a>
-                                );
-                            })}
-                            <div className={styles.testButtonWrapper}>
-                                <a href={`/learn/module/${module.id}/test`}>
-                                    <button className={cn(styles.testButton, {[styles.disabled]: !isTestUnlocked(module)})}>
-                                        <span>CHALLENGE</span>
-                                    </button>
-                                </a>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    );
-                })}
-                {/* <Xwrapper>
-                    <ArrowUpdater />
-                    {arrows}
-                </Xwrapper> */}
+                        );
+                    })}
+                    {/* <Xwrapper>
+                        <ArrowUpdater />
+                        {arrows}
+                    </Xwrapper> */}
+                </div>
             </div>
         </div>
     );
