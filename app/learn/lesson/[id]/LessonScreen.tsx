@@ -10,6 +10,7 @@ import { getMainVariant, getQuestionTokens, getSynonyms, stripInnerDelimiter } f
 import Keyboard from 'react-simple-keyboard';
 import 'react-simple-keyboard/build/css/index.css';
 import keyboardLayoutLib from '@/lib/keyboards/mongolian'
+import LearnModal from '@/components/LearnModal'
 
 export const playRecording = (recording: string | null) => {
 
@@ -178,6 +179,7 @@ export default function LessonScreen({ question, userInput, onUserInput, onUserS
 
     return (
         <div className={cn(styles.screenContainer, {[styles.invisible]: state === 'invisible', [styles.hiding]: state === 'hiding', [styles.visible]: state === 'visible', [styles.appearing]: state === 'appearing'})}>
+            {/* <LearnModal isOpen={true}><div></div></LearnModal> */}
             <div className={styles.screenContent}>
             {question.type === 'INFO' ? (
                 <div className={styles.infoContent}>
@@ -237,7 +239,7 @@ export default function LessonScreen({ question, userInput, onUserInput, onUserS
                         {isTest ? (failed ? <div className={styles.answer}>You have failed the Khan{"'"}s challenge... </div> : correct ? explanationString : 'Not quite...') : (null)}
                         {feedback && <div className={styles.answer}><b>{feedback}</b></div>}
                     </div>
-                    <Keyboard onKeyPress={keyboardPressed} layout={keyboardLayoutLib.layout} layoutName={keyboardLayout} />
+                    <Keyboard onKeyPress={keyboardPressed} layout={keyboardLayoutLib.layout} layoutName={keyboardLayout} theme={cn(styles.keyboard, 'hg-theme-default')} />
                 </div>
             )}
             </div>

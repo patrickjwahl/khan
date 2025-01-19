@@ -41,7 +41,6 @@ export default function CourseDashboard({ course, badQuestionsPerModule, user }:
 
     const { FileInput, openFileDialog, uploadToS3 } = useS3Upload();
 
-
     const router = useRouter();
 
     const breadcrumbs: Breadcrumb[] = [

@@ -5,12 +5,14 @@ $ultradarkbackground: #ababab;
 
 $foreground: #4b4b4b;
 $lightforeground: #5a5a5a;
+$superlightforeground: #6c6c6c;
 
 $blue: #3A86FF;
 $lightblue: #6ba4ff;
 $superlightblue: #9cc2ff;
 $ultralightblue: #cee1ff;
 $darkblue: #005beb;
+$superdarkblue: #00307d;
 
 $purple: #8338EC;
 $darkpurple: #3f0d85;
@@ -21,6 +23,7 @@ $pink: #FF006E;
 $lightpink: #ff4092;
 $superlightpink: #ff80b7;
 $darkpink: #800037;
+$superdarkpink: #66002c;
 
 $gold: #FFBE0B;
 $lightgold: #ffce48;
@@ -46,4 +49,6 @@ $darkorange: #7f2a02;
     darkpink: $darkpink;
     gold: $gold;
     orange: $orange;
+    lightforeground: $lightforeground;
+    superlightforeground: $superlightforeground;
 }

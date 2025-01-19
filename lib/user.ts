@@ -2,6 +2,7 @@ import { cookies } from 'next/headers'
 import { sessionOptions } from './session'
 import { unsealData } from 'iron-session';
 import { Prisma, PrismaClient, User as PrismaUser } from '@prisma/client';
+import { Theme } from '@/app/GlobalState'
 
 export type User = {
     isLoggedIn: boolean,

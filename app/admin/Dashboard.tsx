@@ -31,11 +31,13 @@ export default function Dashboard({ user, courses }: { user: User, courses: Cour
         }
     ];
 
-    useEffect(() => {
-        if (window.innerWidth <= 800) {
-            window.location.replace('/admin/mobile')
-        }
-    }, [])
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
+    const isMobile = /android|iphone|ipad|ipod/.test(userAgent);
+
+    if (isMobile) {
+        window.location.replace('/admin/mobile')
+        return null
+    }
 
     useEffect(() => {
         if (modalVisible) {

@@ -1,16 +1,33 @@
-import { ReactNode, Suspense } from "react";
-import '../../user_globals.scss';
-import styles from '../Learn.module.scss';
-import Navbar from "../Navbar";
-import Sidebar from "./Sidebar";
+import { ReactNode, Suspense } from "react"
+// import '../../user_globals.scss';
+import styles from '../Learn.module.scss'
+import Navbar from "../Navbar"
+import Sidebar from "./Sidebar"
+import { useUser } from "@/lib/user"
+import { prisma } from "@/lib/db"
+import { Theme } from "@/app/GlobalState"
 
-export default function AdminLayout({ children }: { children: ReactNode}) {
+export default async function AdminLayout({ children }: { children: ReactNode }) {
+
+    const user = await useUser()
+    let userData
+    if (user) {
+        userData = await prisma.user.findFirst({
+            where: {
+                id: user.id
+            },
+            select: {
+                theme: true
+            }
+        })
+    }
+
     return (
         <div className={styles.layoutContainer}>
             <div className={styles.layoutNavbarContainer}>
-                <Navbar isCourse />
+                <Navbar isCourse theme={userData?.theme as Theme || 'light'} />
             </div>
-            <div className={styles.layoutMainContainer}>
+            <div id='main-container' className={styles.layoutMainContainer}>
                 <div className={styles.layoutCourseContainer}>
                     {children}
                 </div>
@@ -20,5 +37,5 @@ export default function AdminLayout({ children }: { children: ReactNode}) {
                 </div>
             </div>
         </div>
-    );
+    )
 }

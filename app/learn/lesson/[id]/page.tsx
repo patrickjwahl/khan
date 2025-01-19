@@ -8,6 +8,7 @@ import { getAllVariants, getMainVariant, stripInnerDelimiter } from "@/lib/strin
 import { shuffleArray } from "@/lib/util";
 import ErrorScreen from "../../ErrorScreen";
 import { embedSentencesAndWords } from "@/lib/info_screen_processing";
+import { Theme } from "@/app/GlobalState"
 
 export type QuestionType = 'forward' | 'backward' | 'audio' | 'info';
 export type LessonQuestion = Prisma.QuestionGetPayload<{include: {feedbackRules: true, wordHintsBackward: {include: {wordEntity: true}}, wordHintsForward: {include: {wordEntity: true}}}}> & {question: string | null, answers: string[], questionType: QuestionType, vocabWords: {[w: string]: Word}, vocabSentences: {[id: number]: Question}};
@@ -28,6 +29,17 @@ export default async function Lesson({ params }: { params: { id: string }}) {
     const lessonId = parseInt(params.id);
 
     const user = await useUser();
+    let userData
+    if (user) {
+        userData = await prisma.user.findFirst({
+            where: {
+                id: user.id
+            },
+            select: {
+                theme: true
+            }
+        })
+    }
 
     const lesson = await prisma.lesson.findFirst({
         where: {
@@ -160,5 +172,5 @@ export default async function Lesson({ params }: { params: { id: string }}) {
 
     const questionsWithType = await Promise.all(questionsWithTypePromises);
 
-    return <LessonContent lesson={lesson} module={lesson.module} mode='lesson' questions={questionsWithType} userCourse={userCourse} numLessons={lesson.module.lessons.length} />;
+    return <LessonContent lesson={lesson} theme={user && userData?.theme as Theme || 'light'} module={lesson.module} mode='lesson' questions={questionsWithType} userCourse={userCourse} numLessons={lesson.module.lessons.length} />;
 }

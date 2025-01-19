@@ -15,6 +15,8 @@ export default async function Module({ params }: { params: { id: string }}) {
 
     const user = await useUser();
 
+    await new Promise(r => setTimeout(r, 20000));
+
     if (!user || !user.canEdit) {
         return <ErrorScreen error="You're not allowed to see that!" />
     }

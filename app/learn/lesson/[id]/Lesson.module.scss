@@ -126,6 +126,34 @@
     }
 }
 
+.keyboard {
+    margin-top: 1.2rem;
+}
+
+:global(.dark) .questionContent {
+    input[type=text] {
+        background-color: v.$darkpink;
+        color: v.$background;
+        box-shadow: 0 2px 0 v.$superdarkpink inset;
+
+        &::placeholder {
+            color: v.$lightpink;
+        }
+    }
+}
+
+:global(.dark) .keyboard {
+    background-color: v.$lightforeground;
+
+    :global(.hg-button) {
+        background-color: v.$superlightforeground;
+
+        &:active {
+            background-color: v.$darkblue;
+        }
+    }
+}
+
 .question {
     font-size: 1.2rem;
 }

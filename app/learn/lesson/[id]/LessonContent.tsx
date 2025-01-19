@@ -15,12 +15,13 @@ import { normalizeAnswer } from "@/lib/string_processing";
 import ErrorScreen from "../../ErrorScreen";
 import cn from 'classnames'
 import { GoHeartFill } from "react-icons/go";
+import { Theme } from "@/app/GlobalState"
 
 export type ScreenState = 'hiding' | 'visible' | 'appearing' | 'invisible'
 export type LessonMode = 'lesson' | 'practice' | 'test'
 export type ModuleWithCourse = Prisma.ModuleGetPayload<{include: {course: true}}>
 
-export default function LessonContent({ lesson = null, module, mode, questions, userCourse, numLessons }: { lesson?: Lesson | null, module: ModuleWithCourse, mode: LessonMode, questions: LessonQuestion[], userCourse: UserCourse | null, numLessons: number }) {
+export default function LessonContent({ lesson = null, module, mode, questions, userCourse, numLessons, theme = 'light' }: { lesson?: Lesson | null, module: ModuleWithCourse, mode: LessonMode, questions: LessonQuestion[], userCourse: UserCourse | null, numLessons: number, theme?: Theme }) {
 
     const numQuestions = questions.filter(q => q.type === 'QUESTION').length;
 
@@ -87,6 +88,7 @@ export default function LessonContent({ lesson = null, module, mode, questions, 
         playWomp();
         setScreens([...screens, screens[currentQuestion]]);
         if (mode === 'test' && lives == 1) {
+            setLives(0)
             setIncorrect(true)
             setFailed(true);
         } else {
@@ -207,7 +209,7 @@ export default function LessonContent({ lesson = null, module, mode, questions, 
                     <button onClick={() => location.reload()}>RESTART</button>
                 </div>
                 
-                <ProgressBar customLabel={`${numCorrect}/${numQuestions}`} completed={Math.floor(numCorrect * 100 / numQuestions)} baseBgColor={variables.darkbackground} bgColor={variables.orange} labelClassName={styles.progressBarLabel} />
+                <ProgressBar customLabel={`${numCorrect}/${numQuestions}`} completed={Math.floor(numCorrect * 100 / numQuestions)} baseBgColor={theme === 'light' ? variables.darkbackground : variables.lightforeground} bgColor={variables.orange} labelClassName={styles.progressBarLabel} />
             </div>
             {mode === 'test' && (
                 <div className={styles.livesDisplay}>

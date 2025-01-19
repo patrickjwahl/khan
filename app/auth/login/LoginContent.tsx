@@ -4,19 +4,20 @@ import styles from '../Auth.module.scss';
 import '../../user_globals.scss';
 import { FormEventHandler, useState } from 'react';
 import { post } from '@/lib/api';
-import cn from 'classnames';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import DotLoader from '@/components/DotLoader';
+import variables from '@/app/v.module.scss'
 
 export default function LoginContent() {
 
-    const [ username, setUsername ] = useState('');
-    const [ password, setPassword ] = useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
 
-    const [ usernameError, setUsernameError ] = useState('');
-    const [ passwordError, setPasswordError ] = useState('');
+    const [usernameError, setUsernameError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
 
-    const [ isSubmitting, setIsSubmitting ] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const router = useRouter();
 
@@ -31,8 +32,6 @@ export default function LoginContent() {
 
         const res = await post('/api/auth/login', payload);
         const data = await res.json();
-
-        console.log(data);
 
         if (data.code !== 'OK') {
             switch (data.code) {
@@ -55,15 +54,17 @@ export default function LoginContent() {
             <form onSubmit={logIn}>
                 <h4>Welcome home, conqueror...</h4>
                 <div>
-                    <input type="text" placeholder='Email or username' value={username} onChange={e => {setUsernameError(''); setUsername(e.target.value)}} />
+                    <input type="text" placeholder='Email or username' value={username} onChange={e => { setUsernameError(''); setUsername(e.target.value) }} />
                     {usernameError && <div className={styles.errorMessage}><div>{usernameError}</div></div>}
                 </div>
                 <div>
-                    <input type="password" placeholder='Password' value={password} onChange={e => {setPasswordError(''); setPassword(e.target.value)}} />
+                    <input type="password" placeholder='Password' value={password} onChange={e => { setPasswordError(''); setPassword(e.target.value) }} />
                     {passwordError && <div className={styles.errorMessage}><div>{passwordError}</div></div>}
                 </div>
                 <div>
-                    <input className={cn('orange', {'working': isSubmitting})} type="submit" value={isSubmitting ? '...' : 'LOG IN'} />
+                    <button className='orange' type="submit">
+                        {isSubmitting ? <DotLoader color={variables.background} /> : 'LOG IN'}
+                    </button>
                 </div>
             </form>
             <div className={styles.bottomContainer}>

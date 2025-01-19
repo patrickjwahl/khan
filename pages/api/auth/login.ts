@@ -18,6 +18,8 @@ declare module "iron-session" {
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
 
+    await new Promise(r => setTimeout(r, 10000))
+
     const { username, password } = req.body;
     const emailUser = await prisma.user.findFirst({where: {email: username}});
     const unameUser = await prisma.user.findFirst({where: {username: username}});

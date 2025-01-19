@@ -4,7 +4,7 @@ import styles from '../../Learn.module.scss';
 import Xarrow, { Xwrapper, useXarrow } from 'react-xarrows';
 import variables from '../../../v.module.scss';
 import cn from 'classnames';
-import { useState, useEffect, UIEvent } from 'react';
+import { useState, useEffect, UIEvent, useRef } from 'react';
 
 import { Course, Lesson, Module, Prisma, UserCourse } from "@prisma/client";
 import Link from 'next/link';
@@ -12,6 +12,7 @@ import ProgressBar from '@ramonak/react-progress-bar';
 import { COMPLETIONS_FOR_LESSON_PASS } from '@/lib/settings';
 import Navbar from '../../Navbar';
 import { ModuleWithLessonsAndCourse } from '@/app/admin/module/[id]/ModuleDashboard';
+import DotLoader from '@/components/DotLoader';
 
 export type CourseWithModulesAndLessons = Prisma.CourseGetPayload<{include: {modules: {include: {lessons: true}}}}>;
 type ModuleWithLessons = Prisma.ModuleGetPayload<{include: {lessons: true}}>
@@ -22,8 +23,26 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
     const [ lessonIndex, setLessonIndex ] = useState(initLessonIndex);
     const [ lessonCompletions, setLessonCompletions ] = useState(initLessonCompletions);
     const [ activeModule, setActiveModule ] = useState(0)
-    const [ isDebouncing, setIsDebouncing ] = useState(false)
-    const [ isProgramScrolling, setIsProgramScrolling ] = useState(false)
+    const [ isDebouncing, _setIsDebouncing ] = useState(false)
+    const [ isProgramScrolling, _setIsProgramScrolling ] = useState(false)
+
+    const isDebouncingRef = useRef(isDebouncing)
+    const setIsDebouncing = (val: boolean) => {
+        isDebouncingRef.current = val
+        _setIsDebouncing(val)
+    }
+
+    const isProgramScrollingRef = useRef(isProgramScrolling)
+    const setIsProgramScrolling = (val: boolean) => {
+        isProgramScrollingRef.current = val
+        _setIsProgramScrolling(val)
+    }
+
+    useEffect(() => {
+        document.getElementById('main-container')?.addEventListener('scroll', handleCourseScroll)
+
+        return () => document.getElementById('main-container')?.removeEventListener('scroll', e => {handleCourseScroll})
+    }, [])
 
     useEffect(() => {
         if (moduleIndex === -1) {
@@ -34,6 +53,12 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
     }, []);
 
     useEffect(() => {
+
+        // const offsetHeight = document.getElementById("header")?.offsetHeight
+        // const padding = document.getElementById('course-body').pa
+        let index = document.getElementById('index')
+        if (index) index.style.top = `${index.getBoundingClientRect().top.toString()}px`
+
         const urlSplit = document.URL.split('#')
         if (urlSplit.length > 1) {
             const anchorSplit = urlSplit[1].split('-')
@@ -50,15 +75,15 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
         
     }, []);
 
-    useEffect(() => {
-        if (!isProgramScrolling) {
-            const interval = setInterval(() => {
-                checkActiveModule()
-            }, 200)
+    // useEffect(() => {
+    //     if (!isProgramScrolling) {
+    //         // const interval = setInterval(() => {
+    //         //     checkActiveModule()
+    //         // }, 1000)
             
-            return () => {clearInterval(interval)}
-        }
-    }, [isProgramScrolling])
+    //         return () => {clearInterval(interval)}
+    //     }
+    // }, [isProgramScrolling])
 
     const scrollModuleIntoView = (moduleId: number) => {
         setIsProgramScrolling(true)
@@ -81,18 +106,21 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
         moduleHeaders.forEach(header => {
             const position = header.getBoundingClientRect().top / document.documentElement.clientHeight
             const moduleId = parseInt((header as HTMLElement).dataset.moduleId || activeModule.toString())
-            if (position > 0.05 && position < 0.5 && activeModule != moduleId) {
+            console.log(`Module ${moduleId}: ${position}`)
+            if (position > 0.00 && position < 0.5 && activeModule != moduleId) {
                 setActiveModule(moduleId)
             }
         })
     }
 
     const handleCourseScroll = () => {
-        if (!isDebouncing && !isProgramScrolling) {
+        if (!isDebouncingRef.current && !isProgramScrollingRef.current) {
+            console.log("hi")
             checkActiveModule()
 
             setIsDebouncing(true)
             setTimeout(() => {
+                checkActiveModule()
                 setIsDebouncing(false)
             }, 50)
         }
@@ -134,8 +162,8 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
     }
 
     return (
-        <div className={styles.container}>
-            <div className={styles.courseHeader}>
+        <div className={styles.courseContainer} onScroll={() => handleCourseScroll()}>
+            <div id="header" className={styles.courseHeader}>
                 <div>
                     <div>GENGHIS KHAN ACADEMY</div>
                     { course.image && (
@@ -147,8 +175,8 @@ export default function CourseContent({ course, moduleIndex: initModuleIndex, le
                 </div>
                 {!course.published && <h5 className={styles.previewModeBanner}>This course is in preview mode!</h5>}
             </div>
-            <div className={styles.courseBody} onScroll={() => handleCourseScroll()}>
-                <div className={styles.courseIndex}>
+            <div id='course-body' className={styles.courseBody}>
+                <div id='index' className={styles.courseIndex}>
                     <ul>
                         {course.modules.map(module => (
                             <li className={cn({[styles.selected]: activeModule === module.id})} onClick={changeActiveModule(module.id)}>{module.title}</li>
